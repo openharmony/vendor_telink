@@ -67,29 +67,25 @@ static ble_sts_t AppBleAdvInit(void)
                                 0,  NULL,
                                 BLT_ENABLE_ADV_ALL,
                                 ADV_FP_NONE);
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvParam(): %d", status);
         return status;
     }
 
     status = blc_ll_setAdvData((u8 *)tbl_advData, sizeof(tbl_advData));
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvData(): %d", status);
         return status;
     }
 
     status = blc_ll_setScanRspData((u8 *)tbl_scanRsp, sizeof(tbl_scanRsp));
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setScanRspData(): %d", status);
         return status;
     }
 
     status = blc_ll_setAdvEnable(BLC_ADV_ENABLE); 
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvEnable(): %d", status);
         return status;
     }
@@ -108,20 +104,17 @@ int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
 {
     UNUSED(paramLen);
 
-    if (event & HCI_FLAG_EVENT_BT_STD)  // Controller HCI event
-    {
+    // Controller HCI event
+    if (event & HCI_FLAG_EVENT_BT_STD) {
         u8 evtCode = event & 0xff;
 
-        if(evtCode == HCI_EVT_DISCONNECTION_COMPLETE)  // connection terminate
-        {
+        if (evtCode == HCI_EVT_DISCONNECTION_COMPLETE) {
             GpioWrite(LED_WHITE_HDF, GPIO_VAL_LOW);
         }
-        else if(evtCode == HCI_EVT_LE_META)  // LE Event
-        {
+        else if (evtCode == HCI_EVT_LE_META)  {
             u8 subEvt_code = param[0];
 
-            if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE)  // connection complete
-            {
+            if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
                 GpioWrite(LED_WHITE_HDF, GPIO_VAL_HIGH);
             }
         }
@@ -147,29 +140,25 @@ static ble_sts_t AppBleConnInit(void)
     /***************** ACL connection L2CAP layer MTU TX & RX data FIFO allocation, End **********************************/
 
     status = blc_ll_initAclConnSlaveTxFifo(txFifoBuff, ACL_TX_FIFO_SIZE, ACL_TX_FIFO_NUM, SLAVE_MAX_NUM);
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_initAclConnSlaveTxFifo(): %d", status);
         return status;
     }
 
     status = blc_ll_initAclConnRxFifo(rxFufoBuff, ACL_RX_FIFO_SIZE, ACL_RX_FIFO_NUM);
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_initAclConnRxFifo(): %d", status);
         return status;
     }
 
     status = blc_controller_check_appBufferInitialization();
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_controller_check_appBufferInitialization(): %d", status);
         return status;
     }
 
     status = blc_ll_setMaxConnectionNumber( MASTER_MAX_NUM, SLAVE_MAX_NUM);
-    if(status != BLE_SUCCESS)
-    {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setMaxConnectionNumber(): %d", status);
         return status;
     }

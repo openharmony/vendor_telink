@@ -21,8 +21,7 @@
 /**
  *  @brief  GATT table descriptors enumeration
  */
-typedef enum
-{
+typedef enum {
     ATT_H_START = 0,
 
     /* GAP service */
@@ -51,8 +50,7 @@ typedef enum
 /**
  *  @brief  connect parameters structure for ATT
  */
-typedef struct
-{
+typedef struct {
     /** Minimum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
     u16 intervalMin;
     /** Maximum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
@@ -123,8 +121,7 @@ static const u8 my_PnPtrs [] = {0x02, 0x8a, 0x24, 0x66, 0x82, 0x01, 0x00};
 void AppBleGattInit(void)
 {
     /* Define our GATT table here */
-    static const attribute_t gattTable[] = 
-    {
+    static const attribute_t gattTable[] = {
         {ATT_END_H - 1, 0,0,0,0,0}, // total num of attribute
 
         // 0001 - 0007  gap
