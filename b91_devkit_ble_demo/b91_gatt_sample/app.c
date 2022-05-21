@@ -67,25 +67,25 @@ static ble_sts_t AppBleAdvInit(void)
                                 0,  NULL,
                                 BLT_ENABLE_ADV_ALL,
                                 ADV_FP_NONE);
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvParam(): %d", status);
         return status;
     }
 
     status = blc_ll_setAdvData((u8 *)tbl_advData, sizeof(tbl_advData));
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvData(): %d", status);
         return status;
     }
 
     status = blc_ll_setScanRspData((u8 *)tbl_scanRsp, sizeof(tbl_scanRsp));
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setScanRspData(): %d", status);
         return status;
     }
 
     status = blc_ll_setAdvEnable(BLC_ADV_ENABLE); 
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvEnable(): %d", status);
         return status;
     }
@@ -140,25 +140,25 @@ static ble_sts_t AppBleConnInit(void)
     /***************** ACL connection L2CAP layer MTU TX & RX data FIFO allocation, End **********************************/
 
     status = blc_ll_initAclConnSlaveTxFifo(txFifoBuff, ACL_TX_FIFO_SIZE, ACL_TX_FIFO_NUM, SLAVE_MAX_NUM);
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_initAclConnSlaveTxFifo(): %d", status);
         return status;
     }
 
     status = blc_ll_initAclConnRxFifo(rxFufoBuff, ACL_RX_FIFO_SIZE, ACL_RX_FIFO_NUM);
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_initAclConnRxFifo(): %d", status);
         return status;
     }
 
     status = blc_controller_check_appBufferInitialization();
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_controller_check_appBufferInitialization(): %d", status);
         return status;
     }
 
     status = blc_ll_setMaxConnectionNumber( MASTER_MAX_NUM, SLAVE_MAX_NUM);
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setMaxConnectionNumber(): %d", status);
         return status;
     }
@@ -188,7 +188,7 @@ static void AppBleInit(void)
     u8 mac_public[6];
     u8 mac_random_static[6];
 
-    /* 
+    /*
      * for 1M Flash, flash_sector_mac_address equals to 0xFF000
      * for 2M Flash, flash_sector_mac_address equals to 0x1FF000 
      */
@@ -217,7 +217,7 @@ static void AppBleInit(void)
  */
 void UserInitNormal(void)
 {
-    /* 
+    /*
      * Random number generator must be initiated here( in the beginning of user_init_nromal).
      * when deepSleep retention wakeUp, no need initialize again 
      */

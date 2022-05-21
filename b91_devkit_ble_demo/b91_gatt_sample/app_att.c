@@ -75,36 +75,31 @@ static const u16 my_appearanceUUID      = GATT_UUID_APPEARANCE;
 static const u16 my_periConnParamUUID   = GATT_UUID_PERI_CONN_PARAM;
 
 /* Characteristics */
-static const u8 my_devNameCharVal[5] = 
-{
+static const u8 my_devNameCharVal[5] = {
     CHAR_PROP_READ | CHAR_PROP_NOTIFY,
     U16_LO(GenericAccess_DeviceName_DP_H), U16_HI(GenericAccess_DeviceName_DP_H),
     U16_LO(GATT_UUID_DEVICE_NAME), U16_HI(GATT_UUID_DEVICE_NAME)
 };
 
-static const u8 my_appearanceCharVal[5] = 
-{
+static const u8 my_appearanceCharVal[5] = {
     CHAR_PROP_READ,
     U16_LO(GenericAccess_Appearance_DP_H), U16_HI(GenericAccess_Appearance_DP_H),
     U16_LO(GATT_UUID_APPEARANCE), U16_HI(GATT_UUID_APPEARANCE)
 };
 
-static const u8 my_periConnParamCharVal[5] = 
-{
+static const u8 my_periConnParamCharVal[5] = {
     CHAR_PROP_READ,
     U16_LO(CONN_PARAM_DP_H), U16_HI(CONN_PARAM_DP_H),
     U16_LO(GATT_UUID_PERI_CONN_PARAM), U16_HI(GATT_UUID_PERI_CONN_PARAM)
 };
 
-static const u8 my_serviceChangeCharVal[5] = 
-{
+static const u8 my_serviceChangeCharVal[5] = {
     CHAR_PROP_INDICATE,
     U16_LO(GenericAttribute_ServiceChanged_DP_H), U16_HI(GenericAttribute_ServiceChanged_DP_H),
     U16_LO(GATT_UUID_SERVICE_CHANGE), U16_HI(GATT_UUID_SERVICE_CHANGE)
 };
 
-static const u8 my_PnCharVal[5] = 
-{
+static const u8 my_PnCharVal[5] = {
     CHAR_PROP_READ,
     U16_LO(DeviceInformation_pnpID_DP_H), U16_HI(DeviceInformation_pnpID_DP_H),
     U16_LO(CHARACTERISTIC_UUID_PNP_ID), U16_HI(CHARACTERISTIC_UUID_PNP_ID)
@@ -125,8 +120,16 @@ void AppBleGattInit(void)
         {ATT_END_H - 1, 0,0,0,0,0}, // total num of attribute
 
         // 0001 - 0007  gap
-        {7,ATT_PERMISSIONS_READ,2,2,(u8*)(&my_primaryServiceUUID), (u8*)(&my_gapServiceUUID), 0},
-        {0,ATT_PERMISSIONS_READ,2,sizeof(my_devNameCharVal),(u8*)(&my_characterUUID), (u8*)(my_devNameCharVal), 0},
+        {
+            7, 
+            ATT_PERMISSIONS_READ,
+            2,
+            2,
+            (u8 *)(&my_primaryServiceUUID), 
+            (u8 *)(&my_gapServiceUUID), 
+            0
+        },
+        {0, ATT_PERMISSIONS_READ,2,sizeof(my_devNameCharVal),(u8*)(&my_characterUUID), (u8*)(my_devNameCharVal), 0},
         {0,ATT_PERMISSIONS_READ,2,sizeof(my_devName), (u8*)(&my_devNameUUID), (u8*)(my_devName), 0},
         {0,ATT_PERMISSIONS_READ,2,sizeof(my_appearanceCharVal),(u8*)(&my_characterUUID), (u8*)(my_appearanceCharVal), 0},
         {0,ATT_PERMISSIONS_READ,2,sizeof(my_appearance), (u8*)(&my_appearanceUUID), (u8*)(&my_appearance), 0},
