@@ -42,10 +42,8 @@
 #define LED_TASK_PRIORITY LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO
 #define PROTO_TASK_PRIORITY (OS_TASK_PRIORITY_LOWEST-1)
 
-static void BleTask(const char *pvParameters)
+static void BleTask(void)
 {
-    UNUSED(pvParameters);
-
     /*
      * Enable STimer IRQ trigger if value in level register is below tick.
      * Without this line STimer interrupt will be missed if interrupts were disabled when
@@ -67,7 +65,7 @@ static void BleTask(const char *pvParameters)
  */
 _attribute_ram_code_ void RfIrqHandler(void)
 {
-    blc_sdk_irq_handler ();
+    blc_sdk_irq_handler();
 }
 
 /**
