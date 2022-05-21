@@ -87,7 +87,7 @@ static ble_sts_t AppBleAdvInit(void)
         return status;
     }
 
-    status = blc_ll_setAdvEnable(BLC_ADV_ENABLE);  //adv enable
+    status = blc_ll_setAdvEnable(BLC_ADV_ENABLE); 
     if(status != BLE_SUCCESS)
     {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvEnable(): %d", status);
@@ -108,20 +108,18 @@ int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
 {
     UNUSED(paramLen);
 
-    if (event & HCI_FLAG_EVENT_BT_STD)  //Controller HCI event
+    if (event & HCI_FLAG_EVENT_BT_STD)  // Controller HCI event
     {
         u8 evtCode = event & 0xff;
 
-        //------------ disconnect -------------------------------------
-        if(evtCode == HCI_EVT_DISCONNECTION_COMPLETE)  //connection terminate
+        if(evtCode == HCI_EVT_DISCONNECTION_COMPLETE)  // connection terminate
         {
             GpioWrite(LED_WHITE_HDF, GPIO_VAL_LOW);
         }
-        else if(evtCode == HCI_EVT_LE_META)  //LE Event
+        else if(evtCode == HCI_EVT_LE_META)  // LE Event
         {
             u8 subEvt_code = param[0];
 
-            //------hci le event: le connection complete event---------------------------------
             if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE)  // connection complete
             {
                 GpioWrite(LED_WHITE_HDF, GPIO_VAL_HIGH);
@@ -179,18 +177,18 @@ static ble_sts_t AppBleConnInit(void)
     /* GAP initialization must be done before any other host feature initialization !!! */
     blc_gap_init();
 
-    /* L2CAP buffer Initialization */
+    /* L2CAP buffer initialization */
     blc_l2cap_initAclConnSlaveMtuBuffer(mtu_s_rx_fifo, MTU_S_BUFF_SIZE_MAX, mtu_s_tx_fifo, MTU_S_BUFF_SIZE_MAX);
 
     AppBleGattInit();
 
-    //////////// HCI Initialization  Begin /////////////////////////
+    /* HCI initialization begin */
     blc_hci_registerControllerDataHandler (blc_l2cap_pktHandler);
 
     GpioSetDir(LED_WHITE_HDF, GPIO_DIR_OUT);
 
     blc_hci_le_setEventMask_cmd(HCI_EVT_MASK_DISCONNECTION_COMPLETE | HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
-    blc_hci_registerControllerEventHandler(AppControllerEventCallback); //controller hci event to host all processed in this func
+    blc_hci_registerControllerEventHandler(AppControllerEventCallback); // controller hci event to host all processed in this func
 
     return status;
 }
@@ -201,13 +199,15 @@ static void AppBleInit(void)
     u8 mac_public[6];
     u8 mac_random_static[6];
 
-    /* for 1M   Flash, flash_sector_mac_address equals to 0xFF000
-     * for 2M   Flash, flash_sector_mac_address equals to 0x1FF000 */
+    /* 
+     * for 1M Flash, flash_sector_mac_address equals to 0xFF000
+     * for 2M Flash, flash_sector_mac_address equals to 0x1FF000 
+     */
     blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
 
-    blc_ll_initBasicMCU();                       //mandatory
-    blc_ll_initStandby_module(mac_public);       //mandatory
-    blc_ll_initLegacyAdvertising_module();             //adv module: mandatory for BLE slave,
+    blc_ll_initBasicMCU();                       // Mandatory
+    blc_ll_initStandby_module(mac_public);       // Mandatory
+    blc_ll_initLegacyAdvertising_module();       // ADV Module: Mandatory for BLE slave
 
     blc_ll_initAclConnection_module();
     blc_ll_initAclSlaveRole_module();
@@ -228,9 +228,11 @@ static void AppBleInit(void)
  */
 void UserInitNormal(void)
 {
-    /* random number generator must be initiated here( in the beginning of user_init_nromal).
-     * When deepSleep retention wakeUp, no need initialize again */
-    random_generator_init();  //this is must
+    /* 
+     * Random number generator must be initiated here( in the beginning of user_init_nromal).
+     * when deepSleep retention wakeUp, no need initialize again 
+     */
+    random_generator_init();  // Mandatory
 
     /* init BLE stack */
     AppBleInit();
@@ -241,7 +243,7 @@ void UserInitNormal(void)
  * @param[in]   none
  * @return      none
  */
-_attribute_no_inline_ void MainLoop (void)
+_attribute_no_inline_ void MainLoop(void)
 {
     blc_sdk_main_loop();
 }
