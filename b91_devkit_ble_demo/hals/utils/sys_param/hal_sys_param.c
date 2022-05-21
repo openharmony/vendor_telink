@@ -18,107 +18,107 @@
 
 #include "hal_sys_param.h"
 
-static const char OHOS_DEVICE_TYPE[] = {"TLSR9"};
+static const char OHOS_DEVICE_TYPE[] = {"Evaluation Board"};
 static const char OHOS_DISPLAY_VERSION[] = {"OpenHarmony 3.x"};
 static const char OHOS_MANUFACTURE[] = {"Telink"};
 static const char OHOS_BRAND[] = {"Telink"};
-static const char OHOS_MARKET_NAME[] = {"Telink EVK"};
-static const char OHOS_PRODUCT_SERIES[] = {"Product Series"};
-static const char OHOS_PRODUCT_MODEL[] = {"Product Model"};
-static const char OHOS_SOFTWARE_MODEL[] = {"Software Model"};
-static const char OHOS_HARDWARE_MODEL[] = {"Hardware Model"};
-static const char OHOS_HARDWARE_PROFILE[] = {"aout:true,display:true"};
+static const char OHOS_MARKET_NAME[] = {"B91 Generic Starter Kit"};
+static const char OHOS_PRODUCT_SERIES[] = {"TLSR9"};
+static const char OHOS_PRODUCT_MODEL[] = {"v1.0.0"};
+static const char OHOS_SOFTWARE_MODEL[] = {"v1.0.0"};
+static const char OHOS_HARDWARE_MODEL[] = {"v1.3"};
+static const char OHOS_HARDWARE_PROFILE[] = {"BLE:true"};
 static const char OHOS_BOOTLOADER_VERSION[] = {"bootloader"};
 static const char OHOS_ABI_LIST[] = {"default"};
 static const char OHOS_SERIAL[] = {"1234567890"};
 static const int OHOS_FIRST_API_VERSION = 1;
 
-const char* HalGetDeviceType(void)
+const char *HalGetDeviceType(void)
 {
     return OHOS_DEVICE_TYPE;
 }
 
-const char* HalGetManufacture(void)
+const char *HalGetManufacture(void)
 {
     return OHOS_MANUFACTURE;
 }
 
-const char* HalGetBrand(void)
+const char *HalGetBrand(void)
 {
     return OHOS_BRAND;
 }
 
-const char* HalGetMarketName(void)
+const char *HalGetMarketName(void)
 {
     return OHOS_MARKET_NAME;
 }
 
-const char* HalGetProductSeries(void)
+const char *HalGetProductSeries(void)
 {
     return OHOS_PRODUCT_SERIES;
 }
 
-const char* HalGetProductModel(void)
+const char *HalGetProductModel(void)
 {
     return OHOS_PRODUCT_MODEL;
 }
 
-const char* HalGetSoftwareModel(void)
+const char *HalGetSoftwareModel(void)
 {
     return OHOS_SOFTWARE_MODEL;
 }
 
-const char* HalGetHardwareModel(void)
+const char *HalGetHardwareModel(void)
 {
     return OHOS_HARDWARE_MODEL;
 }
 
-const char* HalGetHardwareProfile(void)
+const char *HalGetHardwareProfile(void)
 {
     return OHOS_HARDWARE_PROFILE;
 }
 
-const char* HalGetSerial(void)
+const char *HalGetSerial(void)
 {
     return OHOS_SERIAL;
 }
 
-const char* HalGetBootloaderVersion(void)
+const char *HalGetBootloaderVersion(void)
 {
     return OHOS_BOOTLOADER_VERSION;
 }
 
-const char* HalGetAbiList(void)
+const char *HalGetAbiList(void)
 {
     return OHOS_ABI_LIST;
 }
 
-const char* HalGetDisplayVersion(void)
+const char *HalGetDisplayVersion(void)
 {
     return OHOS_DISPLAY_VERSION;
 }
 
-const char* HalGetIncrementalVersion(void)
+const char *HalGetIncrementalVersion(void)
 {
     return INCREMENTAL_VERSION;
 }
 
-const char* HalGetBuildType(void)
+const char *HalGetBuildType(void)
 {
     return BUILD_TYPE;
 }
 
-const char* HalGetBuildUser(void)
+const char *HalGetBuildUser(void)
 {
     return BUILD_USER;
 }
 
-const char* HalGetBuildHost(void)
+const char *HalGetBuildHost(void)
 {
     return BUILD_HOST;
 }
 
-const char* HalGetBuildTime(void)
+const char *HalGetBuildTime(void)
 {
     return BUILD_TIME;
 }

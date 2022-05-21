@@ -48,14 +48,14 @@ static void BleTask(const char *pvParameters)
 
     /*
      * Enable STimer IRQ trigger if value in level register is below tick.
-     * Without this line STimer interrupt will be missed if interrupts were disabled when 
+     * Without this line STimer interrupt will be missed if interrupts were disabled when
      * COUNT register reached value of LEVEL register.
      */
     reg_system_irq_mask |= FLD_SYSTEM_TRIG_PAST_EN;
 
     HILOG_INFO(HILOG_MODULE_APP, "%s:%d", __func__, __LINE__);
 
-    while(1) {
+    while (1) {
         MainLoop();
     }
 }
