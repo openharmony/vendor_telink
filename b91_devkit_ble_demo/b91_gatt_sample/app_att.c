@@ -137,7 +137,7 @@ void AppBleGattInit(void)
             0
         },
         {
-            0, 
+            0,
             ATT_PERMISSIONS_READ,
             2, 
             sizeof(my_devNameCharVal),

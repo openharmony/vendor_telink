@@ -84,7 +84,7 @@ static ble_sts_t AppBleAdvInit(void)
         return status;
     }
 
-    status = blc_ll_setAdvEnable(BLC_ADV_ENABLE); 
+    status = blc_ll_setAdvEnable(BLC_ADV_ENABLE);
     if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvEnable(): %d", status);
         return status;
@@ -110,8 +110,7 @@ int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
 
         if (evtCode == HCI_EVT_DISCONNECTION_COMPLETE) {
             GpioWrite(LED_WHITE_HDF, GPIO_VAL_LOW);
-        }
-        else if (evtCode == HCI_EVT_LE_META)  {
+        } else if (evtCode == HCI_EVT_LE_META)  {
             u8 subEvt_code = param[0];
 
             if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
@@ -134,10 +133,10 @@ static ble_sts_t AppBleConnInit(void)
     static u8 txFifoBuff[ACL_TX_FIFO_SIZE * ACL_TX_FIFO_NUM * SLAVE_MAX_NUM] = {0};
     static u8 rxFufoBuff[ACL_RX_FIFO_SIZE * ACL_RX_FIFO_NUM] = {0};
 
-    /***************** ACL connection L2CAP layer MTU TX & RX data FIFO allocation, Begin ********************************/
+    /* ACL connection L2CAP layer MTU TX & RX data FIFO allocation, Begin */
     static 	u8 mtu_s_rx_fifo[SLAVE_MAX_NUM * MTU_S_BUFF_SIZE_MAX];
     static	u8 mtu_s_tx_fifo[SLAVE_MAX_NUM * MTU_S_BUFF_SIZE_MAX];
-    /***************** ACL connection L2CAP layer MTU TX & RX data FIFO allocation, End **********************************/
+    /* ACL connection L2CAP layer MTU TX & RX data FIFO allocation, End */
 
     status = blc_ll_initAclConnSlaveTxFifo(txFifoBuff, ACL_TX_FIFO_SIZE, ACL_TX_FIFO_NUM, SLAVE_MAX_NUM);
     if (status != BLE_SUCCESS) {
@@ -157,7 +156,7 @@ static ble_sts_t AppBleConnInit(void)
         return status;
     }
 
-    status = blc_ll_setMaxConnectionNumber( MASTER_MAX_NUM, SLAVE_MAX_NUM);
+    status = blc_ll_setMaxConnectionNumber(MASTER_MAX_NUM, SLAVE_MAX_NUM);
     if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setMaxConnectionNumber(): %d", status);
         return status;
@@ -177,7 +176,7 @@ static ble_sts_t AppBleConnInit(void)
     GpioSetDir(LED_WHITE_HDF, GPIO_DIR_OUT);
 
     blc_hci_le_setEventMask_cmd(HCI_EVT_MASK_DISCONNECTION_COMPLETE | HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
-    blc_hci_registerControllerEventHandler(AppControllerEventCallback); // controller hci event to host all processed in this func
+    blc_hci_registerControllerEventHandler(AppControllerEventCallback);
 
     return status;
 }
@@ -190,7 +189,7 @@ static void AppBleInit(void)
 
     /*
      * for 1M Flash, flash_sector_mac_address equals to 0xFF000
-     * for 2M Flash, flash_sector_mac_address equals to 0x1FF000 
+     * for 2M Flash, flash_sector_mac_address equals to 0x1FF000
      */
     blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
 
@@ -219,7 +218,7 @@ void UserInitNormal(void)
 {
     /*
      * Random number generator must be initiated here( in the beginning of user_init_nromal).
-     * when deepSleep retention wakeUp, no need initialize again 
+     * when deepSleep retention wakeUp, no need initialize again
      */
     random_generator_init();  // Mandatory
 
