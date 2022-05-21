@@ -39,7 +39,7 @@
 
 STATIC VOID HelloWorldTask(VOID)
 {
-    while(1) {
+    while (1) {
         time_t t = time(NULL);
         printf("Hello World, time: %lld\r\n", (long long)t);
         LOS_TaskDelay(DELAY);
@@ -50,7 +50,7 @@ STATIC VOID LedTask(VOID)
 {
     GpioSetDir(LED_BLUE_HDF, GPIO_DIR_OUT);
 
-    while(1) {
+    while (1) {
         GpioWrite(LED_BLUE_HDF, GPIO_VAL_HIGH);
         LOS_Msleep(DELAY);
 

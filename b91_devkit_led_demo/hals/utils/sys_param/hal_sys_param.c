@@ -30,7 +30,7 @@ static const char OHOS_HARDWARE_MODEL[] = {"Hardware Model"};
 static const char OHOS_HARDWARE_PROFILE[] = {"aout:true,display:true"};
 static const char OHOS_BOOTLOADER_VERSION[] = {"bootloader"};
 static const char OHOS_ABI_LIST[] = {"default"};
-static const char OHOS_SERIAL[] = {"1234567890"};  
+static const char OHOS_SERIAL[] = {"1234567890"};
 static const int OHOS_FIRST_API_VERSION = 1;
 
 const char* HalGetDeviceType(void)
@@ -80,7 +80,7 @@ const char* HalGetHardwareProfile(void)
 
 const char* HalGetSerial(void)
 {
-	return OHOS_SERIAL;
+    return OHOS_SERIAL;
 }
 
 const char* HalGetBootloaderVersion(void)

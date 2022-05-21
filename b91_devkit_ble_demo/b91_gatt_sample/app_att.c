@@ -113,151 +113,151 @@ static u16 serviceChangeVal[2] = {0};
 static u8 serviceChangeCCC[2] = {0, 0};
 static const u8 my_PnPtrs [] = {0x02, 0x8a, 0x24, 0x66, 0x82, 0x01, 0x00};
 
+/* Define our GATT table here */
+static const attribute_t gattTable[] = {
+    {
+        ATT_END_H - 1,
+        0,
+        0,
+        0,
+        0,
+        0
+    }, // total num of attribute
+
+    // 0001 - 0007  gap
+    {
+        7,
+        ATT_PERMISSIONS_READ,
+        2,
+        2,
+        (u8 *)(&my_primaryServiceUUID),
+        (u8 *)(&my_gapServiceUUID),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_devNameCharVal),
+        (u8 *)(&my_characterUUID),
+        (u8 *)(my_devNameCharVal),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_devName),
+        (u8 *)(&my_devNameUUID),
+        (u8 *)(my_devName),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_appearanceCharVal),
+        (u8 *)(&my_characterUUID),
+        (u8 *)(my_appearanceCharVal),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_appearance),
+        (u8 *)(&my_appearanceUUID),
+        (u8 *)(&my_appearance),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_periConnParamCharVal),
+        (u8 *)(&my_characterUUID),
+        (u8 *)(my_periConnParamCharVal),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_periConnParameters),
+        (u8 *)(&my_periConnParamUUID),
+        (u8 *)(&my_periConnParameters),
+        0
+    },
+    // 0008 - 000b gatt
+    {
+        4,
+        ATT_PERMISSIONS_READ,
+        2,
+        2,
+        (u8 *)(&my_primaryServiceUUID),
+        (u8 *)(&my_gattServiceUUID),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_serviceChangeCharVal),
+        (u8 *)(&my_characterUUID),
+        (u8 *)(my_serviceChangeCharVal),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(serviceChangeVal),
+        (u8 *)(&serviceChangeUUID),
+        (u8 *)(&serviceChangeVal),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_RDWR,
+        2,
+        sizeof(serviceChangeCCC),
+        (u8 *)(&clientCharacterCfgUUID),
+        (u8 *)(serviceChangeCCC),
+        0
+    },
+
+    // 000c - 000e  device Information Service
+    {
+        3,
+        ATT_PERMISSIONS_READ,
+        2,
+        2,
+        (u8 *)(&my_primaryServiceUUID),
+        (u8 *)(&my_devServiceUUID),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_PnCharVal),
+        (u8 *)(&my_characterUUID),
+        (u8 *)(my_PnCharVal),
+        0
+    },
+    {
+        0,
+        ATT_PERMISSIONS_READ,
+        2,
+        sizeof(my_PnPtrs),
+        (u8 *)(&my_PnPUUID),
+        (u8 *)(my_PnPtrs),
+        0
+    },
+};
+
 void AppBleGattInit(void)
 {
-    /* Define our GATT table here */
-    static const attribute_t gattTable[] = {
-        {
-            ATT_END_H - 1,
-            0,
-            0,
-            0,
-            0,
-            0
-        }, // total num of attribute
-
-        // 0001 - 0007  gap
-        {
-            7,
-            ATT_PERMISSIONS_READ,
-            2,
-            2,
-            (u8 *)(&my_primaryServiceUUID),
-            (u8 *)(&my_gapServiceUUID),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2, 
-            sizeof(my_devNameCharVal),
-            (u8 *)(&my_characterUUID),
-            (u8 *)(my_devNameCharVal),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_devName),
-            (u8 *)(&my_devNameUUID),
-            (u8 *)(my_devName),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_appearanceCharVal),
-            (u8 *)(&my_characterUUID),
-            (u8 *)(my_appearanceCharVal),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_appearance),
-            (u8 *)(&my_appearanceUUID),
-            (u8 *)(&my_appearance),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_periConnParamCharVal),
-            (u8 *)(&my_characterUUID),
-            (u8 *)(my_periConnParamCharVal),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_periConnParameters),
-            (u8 *)(&my_periConnParamUUID),
-            (u8 *)(&my_periConnParameters),
-            0
-        },
-        // 0008 - 000b gatt
-        {
-            4,
-            ATT_PERMISSIONS_READ,
-            2,
-            2,
-            (u8 *)(&my_primaryServiceUUID),
-            (u8 *)(&my_gattServiceUUID),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_serviceChangeCharVal),
-            (u8 *)(&my_characterUUID),
-            (u8 *)(my_serviceChangeCharVal),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(serviceChangeVal),
-            (u8 *)(&serviceChangeUUID),
-            (u8 *)(&serviceChangeVal),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_RDWR,
-            2,
-            sizeof(serviceChangeCCC),
-            (u8 *)(&clientCharacterCfgUUID),
-            (u8 *)(serviceChangeCCC),
-            0
-        },
-
-        // 000c - 000e  device Information Service
-        {
-            3,
-            ATT_PERMISSIONS_READ,
-            2,
-            2,
-            (u8 *)(&my_primaryServiceUUID),
-            (u8 *)(&my_devServiceUUID),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_PnCharVal),
-            (u8 *)(&my_characterUUID),
-            (u8 *)(my_PnCharVal),
-            0
-        },
-        {
-            0,
-            ATT_PERMISSIONS_READ,
-            2,
-            sizeof(my_PnPtrs),
-            (u8 *)(&my_PnPUUID),
-            (u8 *)(my_PnPtrs),
-            0
-        },
-    };
-
     /* Set up GATT table */
     bls_att_setAttributeTable((u8 *)gattTable);
 }
