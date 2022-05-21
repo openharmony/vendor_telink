@@ -15,6 +15,9 @@
  * limitations under the License.
  *
  *****************************************************************************/
+#include "app.h"
+#include "app_att.h"
+#include "app_config.h"
 
 #include <assert.h>
 
@@ -27,10 +30,6 @@
 #include "tl_common.h"
 #include "drivers.h"
 #include "stack/ble/ble.h"
-
-#include "app_config.h"
-#include "app.h"
-#include "app_att.h"
 
 #define ACL_CONN_MAX_RX_OCTETS    27
 #define ACL_CONN_MAX_TX_OCTETS    27
