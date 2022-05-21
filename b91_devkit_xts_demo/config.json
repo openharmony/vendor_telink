@@ -1,0 +1,61 @@
+{
+    "product_name": "b91_devkit_xts_demo",
+    "ohos_version": "OpenHarmony 3.x",
+    "device_company": "telink",
+    "board": "b91_devkit",
+    "kernel_type": "liteos_m",
+    "kernel_version": "3.0.0",
+    "subsystems": [
+      {
+        "subsystem": "kernel",
+        "components": [
+          { "component": "liteos_m",
+            "features": [
+              ]
+            }
+        ]
+      },
+      {
+        "subsystem": "startup",
+        "components": [
+          { "component": "bootstrap_lite", "features":[] },
+          { "component": "syspara_lite", "features":[] }
+        ]
+      },
+      {
+        "subsystem": "distributedschedule",
+        "components": [
+          { "component": "samgr_lite", "features":[] }
+        ]
+      },
+      {
+        "subsystem": "hiviewdfx",
+        "components": [
+          { "component": "hilog_lite", "features":[] },
+          { "component": "hievent_lite", "features":[] }
+        ]
+      },
+      {
+        "subsystem": "utils",
+        "components": [
+          { "component": "file", "features":[] },
+          {
+            "component": "kv_store",
+            "features": [
+              "enable_ohos_utils_native_lite_kv_store_use_posix_kv_api = false"
+            ]
+          }
+        ]
+      },
+      {
+        "subsystem": "xts",
+        "components": [
+          { "component": "xts_acts", "features": [] },
+          { "component": "xts_tools", "features": [] }
+        ]
+      }
+    ],
+    "third_party_dir": "",
+    "vendor_adapter_dir": "//device/soc/telink/b91/adapter",
+    "product_adapter_dir": "//vendor/telink/b91_devkit_xts_demo/hals"
+}

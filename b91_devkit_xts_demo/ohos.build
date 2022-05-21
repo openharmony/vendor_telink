@@ -1,0 +1,10 @@
+{
+  "parts": {
+    "product_b91_devkit_xts_demo": {
+      "module_list": [
+        "//vendor/telink/b91_devkit_xts_demo:b91_devkit_xts_demo"
+      ]
+    }
+  },
+  "subsystem": "product_b91_devkit_xts_demo"
+}
