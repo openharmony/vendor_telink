@@ -22,11 +22,11 @@
 #include <hiview_log.h>
 #include <gpio_if.h>
 
+#include <board_config.h>
+
 #include "tl_common.h"
 #include "drivers.h"
 #include "stack/ble/ble.h"
-
-#include <board_config.h>
 
 #include "app_config.h"
 #include "app.h"

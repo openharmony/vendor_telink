@@ -26,27 +26,26 @@ typedef enum
     ATT_H_START = 0,
 
     /* GAP service */
-    GenericAccess_PS_H,                     //UUID: 2800, VALUE: uuid 1800
-    GenericAccess_DeviceName_CD_H,          //UUID: 2803, VALUE: Prop: Read | Notify
-    GenericAccess_DeviceName_DP_H,          //UUID: 2A00, VALUE: device name
-    GenericAccess_Appearance_CD_H,          //UUID: 2803, VALUE: Prop: Read
-    GenericAccess_Appearance_DP_H,          //UUID: 2A01, VALUE: appearance
-    CONN_PARAM_CD_H,                        //UUID: 2803, VALUE: Prop: Read
-    CONN_PARAM_DP_H,                        //UUID: 2A04, VALUE: connParameter
+    GenericAccess_PS_H, //UUID: 2800, VALUE: uuid 1800
+    GenericAccess_DeviceName_CD_H, //UUID: 2803, VALUE: Prop: Read | Notify
+    GenericAccess_DeviceName_DP_H, //UUID: 2A00, VALUE: device name
+    GenericAccess_Appearance_CD_H, //UUID: 2803, VALUE: Prop: Read
+    GenericAccess_Appearance_DP_H, //UUID: 2A01, VALUE: appearance
+    CONN_PARAM_CD_H, //UUID: 2803, VALUE: Prop: Read
+    CONN_PARAM_DP_H, //UUID: 2A04, VALUE: connParameter
 
     /* GATT service */
-    GenericAttribute_PS_H,                  //UUID: 2800, VALUE: uuid 1801
-    GenericAttribute_ServiceChanged_CD_H,   //UUID: 2803, VALUE: Prop: Indicate
-    GenericAttribute_ServiceChanged_DP_H,   //UUID: 2A05, VALUE: service change
-    GenericAttribute_ServiceChanged_CCB_H,  //UUID: 2902, VALUE: serviceChangeCCC
+    GenericAttribute_PS_H, //UUID: 2800, VALUE: uuid 1801
+    GenericAttribute_ServiceChanged_CD_H, //UUID: 2803, VALUE: Prop: Indicate
+    GenericAttribute_ServiceChanged_DP_H, //UUID: 2A05, VALUE: service change
+    GenericAttribute_ServiceChanged_CCB_H, //UUID: 2902, VALUE: serviceChangeCCC
 
     /* Device info service */
-    DeviceInformation_PS_H,                 //UUID: 2800, VALUE: uuid 180A
-    DeviceInformation_pnpID_CD_H,           //UUID: 2803, VALUE: Prop: Read
-    DeviceInformation_pnpID_DP_H,           //UUID: 2A50, VALUE: PnPtrs
+    DeviceInformation_PS_H, //UUID: 2800, VALUE: uuid 180A
+    DeviceInformation_pnpID_CD_H, //UUID: 2803, VALUE: Prop: Read
+    DeviceInformation_pnpID_DP_H, //UUID: 2A50, VALUE: PnPtrs
 
     ATT_END_H,
-
 }ATT_HANDLE;
 
 /**
@@ -54,14 +53,14 @@ typedef enum
  */
 typedef struct
 {
-  /** Minimum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
-  u16 intervalMin;
-  /** Maximum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
-  u16 intervalMax;
-  /** Number of LL latency connection events (0x0000 - 0x03e8) */
-  u16 latency;
-  /** Connection Timeout (0x000A - 0x0C80 * 10 ms) */
-  u16 timeout;
+    /** Minimum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
+    u16 intervalMin;
+    /** Maximum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
+    u16 intervalMax;
+    /** Number of LL latency connection events (0x0000 - 0x03e8) */
+    u16 latency;
+    /** Connection Timeout (0x000A - 0x0C80 * 10 ms) */
+    u16 timeout;
 } gap_periConnectParams_t;
 
 /* UUIDs */
@@ -151,5 +150,4 @@ void AppBleGattInit(void)
 
     /* Set up GATT table */
     bls_att_setAttributeTable((u8 *)gattTable);
-
 }

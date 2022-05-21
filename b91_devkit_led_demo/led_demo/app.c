@@ -35,12 +35,14 @@
 #define LED_TASK_PRIORITY LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO
 #define PROTO_TASK_PRIORITY (OS_TASK_PRIORITY_LOWEST-1)
 
+#define DELAY 1000
+
 STATIC VOID HelloWorldTask(VOID)
 {
     while(1) {
         time_t t = time(NULL);
         printf("Hello World, time: %lld\r\n", (long long)t);
-        LOS_TaskDelay(1000);
+        LOS_TaskDelay(DELAY);
     }
 }
 
@@ -50,10 +52,10 @@ STATIC VOID LedTask(VOID)
 
     while(1) {
         GpioWrite(LED_BLUE_HDF, GPIO_VAL_HIGH);
-        LOS_Msleep(1000);
+        LOS_Msleep(DELAY);
 
         GpioWrite(LED_BLUE_HDF, GPIO_VAL_LOW);
-        LOS_Msleep(1000);
+        LOS_Msleep(DELAY);
     }
 }
 

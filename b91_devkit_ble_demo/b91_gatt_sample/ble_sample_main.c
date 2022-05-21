@@ -29,9 +29,6 @@
 #include <ohos_init.h>
 #include <ohos_types.h>
 
-#include "app_config.h"
-#include "app.h"
-
 #include <b91_irq.h>
 #include <riscv_hal.h>
 
@@ -39,13 +36,16 @@
 
 #include <stack/ble/ble.h>
 
+#include "app_config.h"
+#include "app.h"
+
 #define RTOS_SLEEP_MS(__MS__) LOS_Msleep(__MS__)
 #define RTOS_TASK_YIELD() LOS_TaskYield()
 
 #define LED_TASK_PRIORITY LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO
 #define PROTO_TASK_PRIORITY (OS_TASK_PRIORITY_LOWEST-1)
 
-static void BleTask(void *pvParameters)
+static void BleTask(const char *pvParameters)
 {
     UNUSED(pvParameters);
 
