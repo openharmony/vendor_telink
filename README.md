@@ -1,36 +1,36 @@
-# vendor telink
+# vendor_telink
 
-## 介绍
+#### Description
+{**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}
 
-该仓库托管Telink开发的基于TLSR9系列SoC的演示代码，包含LED, BLE和XTS三个演示代码的配置文件和HAL模块。
+#### Software Architecture
+Software architecture description
 
-## 软件目录
+#### Installation
 
-代码路径：
+1.  xxxx
+2.  xxxx
+3.  xxxx
 
-```
-device/                               --- 硬件单板相关仓库
-├── board/telink                      --- Telink相关单板
-└── soc/telink                        --- Telink相关SoC代码
+#### Instructions
 
-vendor/telink/                        --- vendor_telink仓库路径
-├── b91_devkit_led_demo               --- LED示例代码
-└── b91_devkit_ble_demo               --- BLE示例代码
-└── b91_devkit_xts_demo               --- XTS示例代码
-```
+1.  xxxx
+2.  xxxx
+3.  xxxx
 
-## 安装调试教程
+#### Contribution
 
-参考 [安装调试教程](https://gitee.com/openharmony-sig/device_soc_telink/blob/master/README.md)
+1.  Fork the repository
+2.  Create Feat_xxx branch
+3.  Commit your code
+4.  Create Pull Request
 
-## 贡献
 
-[如何参与](https://gitee.com/openharmony/docs/blob/HEAD/zh-cn/contribute/%E5%8F%82%E4%B8%8E%E8%B4%A1%E7%8C%AE.md)
+#### Gitee Feature
 
-[Commit message规范](https://gitee.com/openharmony/device_qemu/wikis/Commit%20message%E8%A7%84%E8%8C%83?sort_id=4042860)
-
-## 相关仓
-
-[device\_soc\_telink](https://gitee.com/openharmony-sig/device_soc_telink)
-
-[device\_board\_telink](https://gitee.com/openharmony-sig/device_board_telink)
+1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
+2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
+3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
+4.  The most valuable open source project [GVP](https://gitee.com/gvp)
+5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
+6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
