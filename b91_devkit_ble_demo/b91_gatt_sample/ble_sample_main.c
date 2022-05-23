@@ -29,15 +29,15 @@
 #include <ohos_init.h>
 #include <ohos_types.h>
 
+#include "app_config.h"
+#include "app.h"
+
 #include <b91_irq.h>
 #include <riscv_hal.h>
 
 #include <B91/gpio.h>
 
 #include <stack/ble/ble.h>
-
-#include "app_config.h"
-#include "app.h"
 
 #define LED_TASK_PRIORITY LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO
 #define PROTO_TASK_PRIORITY (OS_TASK_PRIORITY_LOWEST-1)
