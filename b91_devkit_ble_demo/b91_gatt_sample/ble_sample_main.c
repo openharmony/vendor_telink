@@ -29,8 +29,8 @@
 #include <ohos_init.h>
 #include <ohos_types.h>
 
+/* File "app_config.h" should be included before B91 drivers */
 #include "app_config.h"
-#include "app.h"
 
 #include <b91_irq.h>
 #include <riscv_hal.h>
@@ -38,6 +38,9 @@
 #include <B91/gpio.h>
 
 #include <stack/ble/ble.h>
+
+#include "app.h"
+#include "uni_ble.h"
 
 #define LED_TASK_PRIORITY LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO
 #define PROTO_TASK_PRIORITY (OS_TASK_PRIORITY_LOWEST-1)
@@ -65,7 +68,7 @@ static void BleTask(void)
  */
 _attribute_ram_code_ void RfIrqHandler(void)
 {
-    blc_sdk_irq_handler();
+    uni_ble_sdk_irq_handler();
 }
 
 /**
@@ -75,7 +78,7 @@ _attribute_ram_code_ void RfIrqHandler(void)
  */
 _attribute_ram_code_ void StimerIrqHandler(void)
 {
-    blc_sdk_irq_handler ();
+    uni_ble_sdk_irq_handler();
 }
 
 void BleSampleInit(void)

@@ -21,15 +21,17 @@
 #include <hiview_log.h>
 #include <gpio_if.h>
 
-#include <board_config.h>
-
 #include <tl_common.h>
 #include <drivers.h>
 #include <stack/ble/ble.h>
 
+#include <board_config.h>
+
 #include "app_config.h"
 #include "app.h"
 #include "app_att.h"
+
+#include "uni_ble.h"
 
 #define ACL_CONN_MAX_RX_OCTETS    27
 #define ACL_CONN_MAX_TX_OCTETS    27
@@ -40,6 +42,11 @@
 
 #define ATT_MTU_SLAVE_RX_MAX_SIZE   23
 #define	MTU_S_BUFF_SIZE_MAX			CAL_MTU_BUFF_SIZE(ATT_MTU_SLAVE_RX_MAX_SIZE)
+
+#if TELINK_SDK_B91_BLE_SINGLE
+#undef SLAVE_MAX_NUM
+#define SLAVE_MAX_NUM 1
+#endif /* TELINK_SDK_B91_BLE_SINGLE */
 
 /**
  * @brief  This function do initialization of BLE advertisement
@@ -61,64 +68,45 @@ static ble_sts_t AppBleAdvInit(void)
         0x08, 0x09, 'e', 'S', 'a', 'm', 'p', 'l', 'e',
     };
 
-    status = blc_ll_setAdvParam(ADV_INTERVAL_30MS, ADV_INTERVAL_35MS,
+    status = uni_ble_ll_setAdvParam(ADV_INTERVAL_30MS, ADV_INTERVAL_35MS,
                                 ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC,
                                 0,  NULL,
                                 BLT_ENABLE_ADV_ALL,
                                 ADV_FP_NONE);
     if (status != BLE_SUCCESS) {
-        HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvParam(): %d", status);
+        HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setAdvParam(): %d", status);
         return status;
     }
 
-    status = blc_ll_setAdvData((u8 *)tbl_advData, sizeof(tbl_advData));
+    status = uni_ble_ll_setAdvData((u8 *)tbl_advData, sizeof(tbl_advData));
     if (status != BLE_SUCCESS) {
-        HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvData(): %d", status);
+        HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setAdvData(): %d", status);
         return status;
     }
 
-    status = blc_ll_setScanRspData((u8 *)tbl_scanRsp, sizeof(tbl_scanRsp));
+    status = uni_ble_ll_setScanRspData((u8 *)tbl_scanRsp, sizeof(tbl_scanRsp));
     if (status != BLE_SUCCESS) {
-        HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setScanRspData(): %d", status);
+        HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setScanRspData(): %d", status);
         return status;
     }
 
-    status = blc_ll_setAdvEnable(BLC_ADV_ENABLE);
+    status = uni_ble_ll_setAdvEnable(BLC_ADV_ENABLE);  //adv enable
     if (status != BLE_SUCCESS) {
-        HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setAdvEnable(): %d", status);
+        HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setAdvEnable(): %d", status);
         return status;
     }
 
     return status;
 }
 
-/**
- * @brief      BLE controller event handler call-back.
- * @param[in]  event    event type
- * @param[in]  param    Pointer point to event parameter buffer.
- * @param[in]  paramLen the length of event parameter.
- * @return
- */
-int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
+static void connect(void)
 {
-    UNUSED(paramLen);
+    GpioWrite(LED_WHITE_HDF, GPIO_VAL_HIGH);
+}
 
-    // Controller HCI event
-    if (event & HCI_FLAG_EVENT_BT_STD) {
-        u8 evtCode = event & 0xff;
-
-        if (evtCode == HCI_EVT_DISCONNECTION_COMPLETE) {
-            GpioWrite(LED_WHITE_HDF, GPIO_VAL_LOW);
-        } else if (evtCode == HCI_EVT_LE_META)  {
-            u8 subEvt_code = param[0];
-
-            if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
-                GpioWrite(LED_WHITE_HDF, GPIO_VAL_HIGH);
-            }
-        }
-    }
-
-    return 0;
+static void disconnect(void)
+{
+    GpioWrite(LED_WHITE_HDF, GPIO_VAL_LOW);
 }
 
 /**
@@ -129,17 +117,12 @@ int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
 static ble_sts_t AppBleConnInit(void)
 {
     ble_sts_t status = BLE_SUCCESS;
-    static u8 txFifoBuff[ACL_TX_FIFO_SIZE * ACL_TX_FIFO_NUM * SLAVE_MAX_NUM] = {0};
     static u8 rxFufoBuff[ACL_RX_FIFO_SIZE * ACL_RX_FIFO_NUM] = {0};
+    static u8 txFifoBuff[ACL_TX_FIFO_SIZE * ACL_TX_FIFO_NUM * SLAVE_MAX_NUM] = {0};
 
-    /* ACL connection L2CAP layer MTU TX & RX data FIFO allocation, Begin */
-    static 	u8 mtu_s_rx_fifo[SLAVE_MAX_NUM * MTU_S_BUFF_SIZE_MAX];
-    static	u8 mtu_s_tx_fifo[SLAVE_MAX_NUM * MTU_S_BUFF_SIZE_MAX];
-    /* ACL connection L2CAP layer MTU TX & RX data FIFO allocation, End */
-
-    status = blc_ll_initAclConnSlaveTxFifo(txFifoBuff, ACL_TX_FIFO_SIZE, ACL_TX_FIFO_NUM, SLAVE_MAX_NUM);
+    status = uni_ble_ll_initAclConnTxFifo(txFifoBuff, ACL_TX_FIFO_SIZE, ACL_TX_FIFO_NUM, SLAVE_MAX_NUM);
     if (status != BLE_SUCCESS) {
-        HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_initAclConnSlaveTxFifo(): %d", status);
+        HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_initAclConnTxFifo(): %d", status);
         return status;
     }
 
@@ -155,27 +138,34 @@ static ble_sts_t AppBleConnInit(void)
         return status;
     }
 
+#if TELINK_SDK_B91_BLE_MULTI
     status = blc_ll_setMaxConnectionNumber(MASTER_MAX_NUM, SLAVE_MAX_NUM);
-    if (status != BLE_SUCCESS) {
+    if(status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setMaxConnectionNumber(): %d", status);
         return status;
     }
+#endif /* TELINK_SDK_B91_BLE_MULTI */
 
     /* GAP initialization must be done before any other host feature initialization !!! */
-    blc_gap_init();
+    uni_ble_init();
+
+#if TELINK_SDK_B91_BLE_MULTI
+    /* ACL connection L2CAP layer MTU TX & RX data FIFO allocation, Begin */
+    static u8 mtu_s_rx_fifo[SLAVE_MAX_NUM * MTU_S_BUFF_SIZE_MAX];
+    static u8 mtu_s_tx_fifo[SLAVE_MAX_NUM * MTU_S_BUFF_SIZE_MAX];
+    /* ACL connection L2CAP layer MTU TX & RX data FIFO allocation, End */
 
     /* L2CAP buffer initialization */
     blc_l2cap_initAclConnSlaveMtuBuffer(mtu_s_rx_fifo, MTU_S_BUFF_SIZE_MAX, mtu_s_tx_fifo, MTU_S_BUFF_SIZE_MAX);
+#endif /* TELINK_SDK_B91_BLE_MULTI */
 
     AppBleGattInit();
 
-    /* HCI initialization begin */
-    blc_hci_registerControllerDataHandler (blc_l2cap_pktHandler);
+    uni_ble_l2cap_register_data_handler();
 
     GpioSetDir(LED_WHITE_HDF, GPIO_DIR_OUT);
 
-    blc_hci_le_setEventMask_cmd(HCI_EVT_MASK_DISCONNECTION_COMPLETE | HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
-    blc_hci_registerControllerEventHandler(AppControllerEventCallback);
+    uni_ble_register_connect_disconnect_cb(connect, disconnect);
 
     return status;
 }
@@ -194,10 +184,10 @@ static void AppBleInit(void)
 
     blc_ll_initBasicMCU();                       // Mandatory
     blc_ll_initStandby_module(mac_public);       // Mandatory
-    blc_ll_initLegacyAdvertising_module();       // ADV Module: Mandatory for BLE slave
+    uni_ble_ll_initAdvertising_module();         // ADV Module: Mandatory for BLE slave
 
-    blc_ll_initAclConnection_module();
-    blc_ll_initAclSlaveRole_module();
+    uni_ble_ll_initConnection_module();
+    uni_ble_ll_initSlaveRole_module();
 
     status = AppBleAdvInit();
     HILOG_INFO(HILOG_MODULE_APP, "AppBleAdvInit(): %d", status);
@@ -232,5 +222,5 @@ void UserInitNormal(void)
  */
 _attribute_no_inline_ void MainLoop(void)
 {
-    blc_sdk_main_loop();
+    uni_ble_sdk_main_loop();
 }
