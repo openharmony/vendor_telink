@@ -209,22 +209,17 @@ static int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
     if (event & HCI_FLAG_EVENT_BT_STD) {
         u8 evtCode = event & 0xff;
 
-        //------------ disconnect -------------------------------------
-        if(evtCode == HCI_EVT_DISCONNECTION_COMPLETE) {
+        // ------------ disconnect -------------------------------------
+        if (evtCode == HCI_EVT_DISCONNECTION_COMPLETE) {
             connect_cb_t func = g_app_ble_state.disconnect;
             if (func) {
                 func();
             }
-        }
-        else if(evtCode == HCI_EVT_LE_META) {
-            u8 subEvt_code = param[0];
-
-            //------hci le event: le connection complete event---------------------------------
-            if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
-                connect_cb_t func = g_app_ble_state.connect;
-                if (func) {
-                    func();
-                }
+        } else if ((evtCode == HCI_EVT_LE_META) && (param[0] == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
+            // ------hci le event: le connection complete event---------------------------------
+            connect_cb_t func = g_app_ble_state.connect;
+            if (func) {
+                func();
             }
         }
     }
@@ -236,8 +231,11 @@ void uni_ble_register_connect_disconnect_cb(connect_cb_t on_connect, connect_cb_
 {
     g_app_ble_state.connect = on_connect;
     g_app_ble_state.disconnect = on_disconnect;
+
     blc_hci_le_setEventMask_cmd(HCI_EVT_MASK_DISCONNECTION_COMPLETE | HCI_LE_EVT_MASK_CONNECTION_COMPLETE);
-    blc_hci_registerControllerEventHandler(AppControllerEventCallback); //controller hci event to host all processed in this func
+
+    // controller hci event to host all processed in this func
+    blc_hci_registerControllerEventHandler(AppControllerEventCallback);
 }
 
 #endif /* TELINK_SDK_B91_BLE_SINGLE */

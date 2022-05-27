@@ -28,8 +28,8 @@
 #include <board_config.h>
 
 #include "app_config.h"
-#include "app.h"
 #include "app_att.h"
+#include "app.h"
 
 #include "uni_ble.h"
 
@@ -68,11 +68,8 @@ static ble_sts_t AppBleAdvInit(void)
         0x08, 0x09, 'e', 'S', 'a', 'm', 'p', 'l', 'e',
     };
 
-    status = uni_ble_ll_setAdvParam(ADV_INTERVAL_30MS, ADV_INTERVAL_35MS,
-                                ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC,
-                                0,  NULL,
-                                BLT_ENABLE_ADV_ALL,
-                                ADV_FP_NONE);
+    status = uni_ble_ll_setAdvParam(ADV_INTERVAL_30MS, ADV_INTERVAL_35MS, ADV_TYPE_CONNECTABLE_UNDIRECTED,
+        OWN_ADDRESS_PUBLIC, 0, NULL, BLT_ENABLE_ADV_ALL, ADV_FP_NONE);
     if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setAdvParam(): %d", status);
         return status;
@@ -90,7 +87,7 @@ static ble_sts_t AppBleAdvInit(void)
         return status;
     }
 
-    status = uni_ble_ll_setAdvEnable(BLC_ADV_ENABLE);  //adv enable
+    status = uni_ble_ll_setAdvEnable(BLC_ADV_ENABLE); // Advertising enable
     if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setAdvEnable(): %d", status);
         return status;
@@ -140,7 +137,7 @@ static ble_sts_t AppBleConnInit(void)
 
 #if TELINK_SDK_B91_BLE_MULTI
     status = blc_ll_setMaxConnectionNumber(MASTER_MAX_NUM, SLAVE_MAX_NUM);
-    if(status != BLE_SUCCESS) {
+    if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "blc_ll_setMaxConnectionNumber(): %d", status);
         return status;
     }
