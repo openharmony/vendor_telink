@@ -8,7 +8,7 @@
 
 代码路径：
 
-```
+```bash
 device/                               --- 硬件单板相关仓库
 ├── board/telink                      --- Telink相关单板
 └── soc/telink                        --- Telink相关SoC代码
@@ -21,7 +21,7 @@ vendor/telink/                        --- vendor_telink仓库路径
 
 ## 安装调试教程
 
-参考 [安装调试教程](https://gitee.com/openharmony-sig/device_soc_telink/blob/master/README.md)
+参考 [安装调试教程](https://gitee.com/openharmony-sig/device_soc_telink/blob/master/README_zh.md)
 
 ## 贡献
 
