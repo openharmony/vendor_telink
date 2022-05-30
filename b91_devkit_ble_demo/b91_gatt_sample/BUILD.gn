@@ -30,6 +30,7 @@ source_set("myapp_inner") {
         "app.c",
         "app_att.c",
         "ble_sample_main.c",
+        "uni_ble.c",
     ]
 
     deps = [

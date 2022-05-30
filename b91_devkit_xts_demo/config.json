@@ -9,10 +9,7 @@
       {
         "subsystem": "kernel",
         "components": [
-          { "component": "liteos_m",
-            "features": [
-              ]
-            }
+          { "component": "liteos_m", "features": [] }
         ]
       },
       {
@@ -50,7 +47,7 @@
       {
         "subsystem": "xts",
         "components": [
-          { "component": "xts_acts", "features": [] },
+          { "component": "xts_acts", "features": [ "build_xts=true" ] },
           { "component": "xts_tools", "features": [] }
         ]
       }
