@@ -215,11 +215,16 @@ static int AppControllerEventCallback(u32 event, u8 *param, int paramLen)
             if (func) {
                 func();
             }
-        } else if ((evtCode == HCI_EVT_LE_META) && (param[0] == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
-            // ------hci le event: le connection complete event---------------------------------
-            connect_cb_t func = g_app_ble_state.connect;
-            if (func) {
-                func();
+        }
+        else if (evtCode == HCI_EVT_LE_META) {
+            u8 subEvt_code = param[0];
+
+            //------hci le event: le connection complete event---------------------------------
+            if (subEvt_code == HCI_SUB_EVT_LE_CONNECTION_COMPLETE) {
+                connect_cb_t func = g_app_ble_state.connect;
+                if (func) {
+                    func();
+                }
             }
         }
     }

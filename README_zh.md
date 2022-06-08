@@ -29,9 +29,9 @@
 .
 └── vendor
     └── telink                          # vendor_telink仓库路径
-        ├── b91_devkit_ble_demo             # BLE示例代码
-        ├── b91_devkit_led_demo             # LED示例代码
-        ├── b91_devkit_xts_demo             # XTS示例代码
+        ├── ble_demo                        # BLE示例代码
+        ├── led_demo                        # LED示例代码
+        ├── xts_demo                        # XTS示例代码
         ├── LICENSE                         # 证书文件
         ├── OAT.xml                         # 开源仓审查规则配置文件
         ├── README.md                       # 英文版README

@@ -1,5 +1,5 @@
 {
-    "product_name": "b91_devkit_xts_demo",
+    "product_name": "xts_demo",
     "ohos_version": "OpenHarmony 3.x",
     "device_company": "telink",
     "board": "b91_devkit",
@@ -54,5 +54,5 @@
     ],
     "third_party_dir": "",
     "vendor_adapter_dir": "//device/soc/telink/b91/adapter",
-    "product_adapter_dir": "//vendor/telink/b91_devkit_xts_demo/hals"
+    "product_adapter_dir": "//vendor/telink/xts_demo/hals"
 }
