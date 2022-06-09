@@ -1,10 +1,10 @@
 {
   "parts": {
-    "product_b91_devkit_led_demo": {
+    "product_led_demo": {
       "module_list": [
-        "//vendor/telink/b91_devkit_led_demo:b91_devkit_led_demo"
+        "//vendor/telink/led_demo:led_demo"
       ]
     }
   },
-  "subsystem": "product_b91_devkit_led_demo"
+  "subsystem": "product_led_demo"
 }
