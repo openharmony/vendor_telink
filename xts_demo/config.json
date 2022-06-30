@@ -32,10 +32,9 @@
           { "component": "hievent_lite", "features":[] }
         ]
       },
-      {
-        "subsystem": "utils",
+	  {
+        "subsystem": "distributeddatamgr",
         "components": [
-          { "component": "file", "features":[] },
           {
             "component": "kv_store",
             "features": [
@@ -43,6 +42,12 @@
             ]
           }
         ]
+      },
+      {
+        "subsystem": "utils",
+        "components": [
+          { "component": "file", "features":[] }
+       ]
       },
       {
         "subsystem": "xts",
