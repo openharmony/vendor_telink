@@ -16,13 +16,13 @@
 import("//device/soc/telink/util/util.gni")
 
 b91_firmware("led_demo") {
-    explicit_libs = [
-        "bootstrap",
-        "broadcast",
-    ]
+  explicit_libs = [
+    "bootstrap",
+    "broadcast",
+  ]
 
-    deps = [
-        "//build/lite:ohos",
-        "led_demo",
-    ]
+  deps = [
+    "led_demo",
+    "//build/lite:ohos",
+  ]
 }

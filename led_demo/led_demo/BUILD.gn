@@ -13,46 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//drivers/adapter/khdf/liteos_m/hdf.gni")
-
 declare_args() {
-    telink_gpio_irq_sample_enable = false
+  telink_gpio_irq_sample_enable = false
 }
 
 config("myapp_config") {
-    include_dirs = [
-        "//utils/native/lite/include",
-    ]
+  include_dirs = [ "//utils/native/lite/include" ]
 
-    configs = [
-        "//device/soc/telink/b91:B91_config",
-    ]
+  configs = [ "//device/soc/telink/b91:B91_config" ]
 }
 
 source_set("myapp_inner") {
-    sources = [
-        "app.c",
-    ]
+  sources = [ "app.c" ]
 
-    deps = [
-        "//base/hiviewdfx/hiview_lite",
-    ]
+  deps = [ "//base/hiviewdfx/hiview_lite" ]
 
-    if (!defined(defines)) {
-        defines = []
-    }
+  if (!defined(defines)) {
+    defines = []
+  }
 
-    if (telink_gpio_irq_sample_enable) {
-        defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=1" ]
-    } else {
-        defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=0" ]
-    }
+  if (telink_gpio_irq_sample_enable) {
+    defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=1" ]
+  } else {
+    defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=0" ]
+  }
 
-    configs += [ ":myapp_config" ]
+  configs += [ ":myapp_config" ]
 }
 
 static_library("led_demo") {
-    deps = [":myapp_inner"]
+  deps = [ ":myapp_inner" ]
 
-    configs += [ ":myapp_config" ]
+  configs += [ ":myapp_config" ]
 }
