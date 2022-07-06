@@ -16,32 +16,26 @@
 import("//drivers/hdf_core/adapter/khdf/liteos_m/hdf.gni")
 
 config("myapp_config") {
-    include_dirs = [
-        "//utils/native/lite/include",
-    ]
+  include_dirs = [ "//utils/native/lite/include" ]
 
-    configs = [
-        "//device/soc/telink/b91:B91_config",
-    ]
+  configs = [ "//device/soc/telink/b91:B91_config" ]
 }
 
 source_set("myapp_inner") {
-    sources = [
-        "app.c",
-        "app_att.c",
-        "ble_sample_main.c",
-        "uni_ble.c",
-    ]
+  sources = [
+    "app.c",
+    "app_att.c",
+    "ble_sample_main.c",
+    "uni_ble.c",
+  ]
 
-    deps = [
-        "//base/hiviewdfx/hiview_lite",
-    ]
+  deps = [ "//base/hiviewdfx/hiview_lite" ]
 
-    configs += [ ":myapp_config" ]
+  configs += [ ":myapp_config" ]
 }
 
 static_library("b91_gatt_sample") {
-    deps = [":myapp_inner"]
+  deps = [ ":myapp_inner" ]
 
-    configs += [ ":myapp_config" ]
+  configs += [ ":myapp_config" ]
 }
