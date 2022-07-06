@@ -16,20 +16,18 @@
 import("//device/soc/telink/util/util.gni")
 
 b91_firmware("xts_demo") {
-    explicit_libs = [
-        "bootstrap",
-        "broadcast",
-        "hctest",
-        "module_ActsKvStoreTest",
-        "module_ActsUtilsFileTest",
-        "module_ActsParameterTest",
-        "module_ActsBootstrapTest",
-        "module_ActsHieventLiteTest",
-        "module_ActsDfxFuncTest",
-        "module_ActsSamgrTest",
-    ]
+  explicit_libs = [
+    "bootstrap",
+    "broadcast",
+    "hctest",
+    "module_ActsKvStoreTest",
+    "module_ActsUtilsFileTest",
+    "module_ActsParameterTest",
+    "module_ActsBootstrapTest",
+    "module_ActsHieventLiteTest",
+    "module_ActsDfxFuncTest",
+    "module_ActsSamgrTest",
+  ]
 
-    deps = [
-        "//build/lite:ohos",
-    ]
+  deps = [ "//build/lite:ohos" ]
 }
