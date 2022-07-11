@@ -68,11 +68,11 @@ static ble_sts_t AppBleAdvInit(void)
         0x08, 0x09, 'e', 'S', 'a', 'm', 'p', 'l', 'e',
     };
 
-    status = uni_ble_ll_setAdvParam(ADV_INTERVAL_30MS, ADV_INTERVAL_35MS,
-                                    ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC,
-                                    0,  NULL,
-                                    BLT_ENABLE_ADV_ALL,
-                                    ADV_FP_NONE);
+    status = uni_ble_ll_setAdvParam(ADV_INTERVAL_500MS, ADV_INTERVAL_500MS,
+                                ADV_TYPE_CONNECTABLE_UNDIRECTED, OWN_ADDRESS_PUBLIC,
+                                0,  NULL,
+                                BLT_ENABLE_ADV_ALL,
+                                ADV_FP_NONE);
     if (status != BLE_SUCCESS) {
         HILOG_ERROR(HILOG_MODULE_APP, "uni_ble_ll_setAdvParam(): %d", status);
         return status;
@@ -181,6 +181,8 @@ static void AppBleInit(void)
      * for 2M Flash, flash_sector_mac_address equals to 0x1FF000
      */
     blc_initMacAddress(flash_sector_mac_address, mac_public, mac_random_static);
+
+    rf_set_power_level(RF_POWER_P2p79dBm);
 
     blc_ll_initBasicMCU();                       // Mandatory
     blc_ll_initStandby_module(mac_public);       // Mandatory
