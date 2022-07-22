@@ -20,7 +20,7 @@
         ]
       },
       {
-        "subsystem": "distributedschedule",
+        "subsystem": "systemabilitymgr",
         "components": [
           { "component": "samgr_lite", "features":[] }
         ]
