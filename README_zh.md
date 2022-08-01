@@ -38,7 +38,7 @@
         └── README_zh.md                    # 中文版README  
 ```
 
-全面而详细的目录结构，包括演示样例的代码的配置文件和HAL模块所在位置，可以参考TLSR9系列SoC芯片SDK仓库README文档中的章节[确认目录结构](https://gitee.com/openharmony-sig/device_soc_telink/blob/master/README_zh.md#确认目录结构)。
+全面而详细的目录结构，包括演示样例的代码的配置文件和HAL模块所在位置，可以参考TLSR9系列SoC芯片SDK仓库README文档中的章节[确认目录结构](https://gitee.com/openharmony/device_soc_telink/blob/master/README_zh.md#确认目录结构)。
 
 ## 安装调试教程
 
@@ -46,7 +46,7 @@
 
 使用指定的烧录工具，将固件烧录进TLSR9系列SoC芯片的开发板（如B91）后，重新上电即可运行示例并开始进行调试。
 
-详情可以参考TLSR9系列SoC芯片SDK仓库中的[README](https://gitee.com/openharmony-sig/device_soc_telink/blob/master/README_zh.md)文档。
+详情可以参考TLSR9系列SoC芯片SDK仓库中的[README](https://gitee.com/openharmony/device_soc_telink/blob/master/README_zh.md)文档。
 
 ## 贡献
 
@@ -56,6 +56,6 @@
 
 ## 相关仓库
 
-TLSR9系列SoC芯片SDK：[device\_soc\_telink](https://gitee.com/openharmony-sig/device_soc_telink)
+TLSR9系列SoC芯片SDK：[device\_soc\_telink](https://gitee.com/openharmony/device_soc_telink)
 
-B91开发板：[device\_board\_telink](https://gitee.com/openharmony-sig/device_board_telink)
+B91开发板：[device\_board\_telink](https://gitee.com/openharmony/device_board_telink)
