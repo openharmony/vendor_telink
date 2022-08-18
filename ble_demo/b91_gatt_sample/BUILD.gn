@@ -16,7 +16,7 @@
 import("//drivers/hdf_core/adapter/khdf/liteos_m/hdf.gni")
 
 config("myapp_config") {
-  include_dirs = [ "//utils/native/lite/include" ]
+  include_dirs = [ "//commonlibrary/utils_lite/include" ]
 
   configs = [ "//device/soc/telink/b91:B91_config" ]
 }
