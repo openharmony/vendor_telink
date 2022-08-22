@@ -16,50 +16,50 @@
 import("//drivers/adapter/khdf/liteos_m/hdf.gni")
 
 declare_args() {
-    telink_gpio_irq_sample_enable = false
+  telink_gpio_irq_sample_enable = false
 }
 
 config("myapp_config") {
-    include_dirs = [
-        "//utils/native/lite/include",
-        "//base/update/ota_lite/interfaces/kits",
-        "//base/update/ota_lite/frameworks/source/verify",
-        "$ohos_third_party_dir/mbedtls/include",
-    ]
+  include_dirs = [
+    "//utils/native/lite/include",
+    "//base/update/ota_lite/interfaces/kits",
+    "//base/update/ota_lite/frameworks/source/verify",
+    "$ohos_third_party_dir/mbedtls/include",
+  ]
 
-    configs = [
-        "//device/soc/telink/b91:B91_config",
-    ]
+  configs = [
+    "//device/soc/telink/b91:B91_config",
+  ]
 }
 
 source_set("myapp_inner") {
-    sources = [
-        "app.c",
-        "serial.c",
-    ]
+  sources = [
+    "app.c",
+    "serial.c",
+  ]
 
-    deps = [
-        "//base/hiviewdfx/hiview_lite",
-        "//base/update/ota_lite/frameworks:ota_lite",
-    ]
+  deps = [
+    "//base/hiviewdfx/hiview_lite",
+    "//base/update/ota_lite/frameworks:ota_lite",
+  ]
 
-    if (!defined(defines)) {
-        defines = []
-    }
+  if (!defined(defines)) {
+    defines = []
+  }
 
-    if (telink_gpio_irq_sample_enable) {
-        defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=1" ]
-    } else {
-        defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=0" ]
-    }
+  if (telink_gpio_irq_sample_enable) {
+    defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=1" ]
+  } else {
+    defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=0" ]
+  }
 
-    configs += [ ":myapp_config" ]
+  configs += [ ":myapp_config" ]
 }
 
 static_library("ota_demo") {
-    deps = [
-        ":myapp_inner",
-    ]
+  deps = [
+    ":myapp_inner",
+  ]
 
-    configs += [ ":myapp_config" ]
+  configs += [ ":myapp_config" ]
 }

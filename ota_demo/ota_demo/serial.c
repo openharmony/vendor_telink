@@ -39,12 +39,14 @@
 #define SERVICE_UART_STOP_BITS   UART_STOP_BIT_ONE
 #define SERVICE_UART_BAUDRATE    115200
 
+#define HZ_IN_MHZ (1000 * 1000)
+
 #define UARTS_COUNT 2
+#define UART_HW_FIFO_SIZE 8
 
 #define UART_RX_BUF 256
 
 #define NON_VALID_MUTEX_ID UINT32_MAX
-//#define NUM_HAL_INTERRUPT_UART (RISCV_INTERRUPT__PLATFORM_USE + IRQ19_UART0)
 
 /**
  * TX:
@@ -85,26 +87,23 @@ static struct {
 
     bool init;
 } g_uartState = {
-  .dev[0 ...(UARTS_COUNT - 1)] =
-    {
-      .tx =
-        {
-          .mux = NON_VALID_MUTEX_ID,
+    .dev[0 ...(UARTS_COUNT - 1)] = {
+        .tx = {
+            .mux = NON_VALID_MUTEX_ID,
 #if LOSCFG_UART_BUFFERED_TX_BUFFER_ENABLE
-          .start = 0,
-          .end = 0,
+            .start = 0,
+            .end = 0,
     #if UART_TX_THREAD_PREEMTION_ENABLE
-          .threadWait = false,
+            .threadWait = false,
     #endif /* ENABLE_UART_THREAD_PREEMTION */
-#endif     /* LOSCFG_UART_BUFFERED_TX_BUFFER_ENABLE */
+#endif /* LOSCFG_UART_BUFFERED_TX_BUFFER_ENABLE */
         },
-      .rx =
-        {
-          .start = 0,
-          .end = 0,
+        .rx = {
+            .start = 0,
+            .end = 0,
         },
     },
-  .init = false,
+    .init = false,
 };
 
 __attribute__((unused)) static struct {
@@ -129,7 +128,7 @@ STATIC_INLINE VOID VendorUartSendByte(UINT32 uartNum, UINT8 txData)
  */
 static inline bool uart_send_byte_nonblock(uart_num_e uart_num, unsigned char tx_data)
 {
-    if (uart_get_txfifo_num(uart_num) > 7) {
+    if (uart_get_txfifo_num(uart_num) > (UART_HW_FIFO_SIZE - sizeof(tx_data))) {
         return false;
     }
 
@@ -182,8 +181,8 @@ INT32 uart_read(UINT32 timeOut)
     while (g_uartState.dev[SERVICE_UART_PORT].rx.start == g_uartState.dev[SERVICE_UART_PORT].rx.end) {
         LOS_IntRestore(intSave);
         UINT32 ret = LOS_EventRead(&g_uartState.dev[SERVICE_UART_PORT].rx.event, 1, LOS_WAITMODE_OR | LOS_WAITMODE_CLR,
-                      timeOut);
-        if (0 != (ret & LOS_ERRTYPE_ERROR)) {
+            timeOut);
+        if ((ret & LOS_ERRTYPE_ERROR) != 0) {
             return -1;
         }
         intSave = LOS_IntLock();
@@ -210,7 +209,7 @@ INT32 uart_read_buf(UINT32 timeOut, UINT8 *buf, INT32 max)
         g_uartState.dev[SERVICE_UART_PORT].rx.start = (g_uartState.dev[SERVICE_UART_PORT].rx.start + 1) % UART_RX_BUF;
     }
 
-    if ((nbytes < max) && (0 != timeOut)) {
+    if ((nbytes < max) && (timeOut != 0)) {
         g_uartState.dev->rx.irq_buf.ptr = buf;
         g_uartState.dev->rx.irq_buf.nbytes = nbytes;
         g_uartState.dev->rx.irq_buf.max = max;
@@ -247,7 +246,7 @@ STATIC VOID UartIrqHandler(void *arg)
 {
     uart_num_e uartNum = (uart_num_e)arg;
     while (uart_get_rxfifo_num(uartNum) > 0) {
-        if (NULL != g_uartState.dev->rx.irq_buf.ptr) {
+        if (g_uartState.dev->rx.irq_buf.ptr != NULL) {
             UINT8 c = VendorUartGetChar(uartNum);
             g_uartState.dev->rx.irq_buf.ptr[g_uartState.dev->rx.irq_buf.nbytes++] = c;
             if (g_uartState.dev->rx.irq_buf.nbytes >= g_uartState.dev->rx.irq_buf.max) {
@@ -269,7 +268,7 @@ void SerialInit(void)
 
     uart_set_pin(SERVICE_UART_PIN_TX, SERVICE_UART_PIN_RX);
     uart_reset(SERVICE_UART_PORT);
-    uart_cal_div_and_bwpc(SERVICE_UART_BAUDRATE, sys_clk.pclk * 1000 * 1000, &div, &bwpc);
+    uart_cal_div_and_bwpc(SERVICE_UART_BAUDRATE, sys_clk.pclk * HZ_IN_MHZ, &div, &bwpc);
     telink_b91_uart_init(SERVICE_UART_PORT, div, bwpc, SERVICE_UART_PARITY, SERVICE_UART_STOP_BITS);
     uart_rx_irq_trig_level(SERVICE_UART_PORT, 1);
     uart_tx_irq_trig_level(SERVICE_UART_PORT, 0);

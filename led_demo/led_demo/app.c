@@ -72,7 +72,6 @@ _attribute_ram_code_ int32_t gpio_handler(uint16_t gpio, void *data)
 
 void AppMain(void)
 {
-#if 0
     UINT32 ret;
     UINT32 taskId = 0;
     TSK_INIT_PARAM_S taskParam = {0};
@@ -102,7 +101,6 @@ void AppMain(void)
     GpioSetIrq(SW1_3_GPIO_HDF, GPIO_IRQ_TRIGGER_RISING, gpio_handler, NULL);
     GpioEnableIrq(SW1_3_GPIO_HDF);
 #endif /* TELINK_GPIO_IRQ_SAMPLE_ENABLE */
-#endif
 }
 
 SYS_RUN(AppMain);

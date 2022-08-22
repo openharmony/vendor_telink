@@ -61,8 +61,21 @@
 
 #define DLY_1S     1000
 #define MAXRETRANS 25
+#define MAX_BYTE_RETRIES 16
+#define FLUSH_INPUT_NBYTES 3
+
+#define XMODEM_PACKET_SIZE 128
+#define XMODEM1K_PACKET_SIZE 1024
+#define XMODEM_BLOCK_NUMBER 1
+#define XMODEM_BLOCK_NUMBER_INV 2
+#define XMODEM_HEADER_SIZE 3
 
 #define XMODEM_BUF_SIZE 1024
+#define READ_BYTE_TIMEOUT_MS 5000
+
+#define OTA_THREAD_STACK_SIZE (1024 * 16)
+
+#define RADIX_10 10
 
 typedef enum {
     COMMAND_TYPE_ERROR_TIMEOUT = -1,
@@ -81,13 +94,21 @@ typedef enum {
     COMMAND_TYPE_SIGN = 8,
 } CommandType;
 
+enum {
+    XMODEM_ERROR_CANCEL = -1,
+    XMODEM_ERROR_SYNC_ERROR = -2,
+    XMODEM_ERROR_RETRANS_LIMIT = -3,
+};
+
 unsigned short crc16_ccitt(const unsigned char *buf, int len)
 {
     unsigned short crc = 0;
-    while (len--) {
+    int remain = len;
+    const unsigned char *p = buf;
+    while (remain--) {
         int i;
-        crc ^= *(char *)buf++ << 8;
-        for (i = 0; i < 8; ++i) {
+        crc ^= *p++ << CHAR_BIT;
+        for (i = 0; i < CHAR_BIT; ++i) {
             if (crc & 0x8000) {
                 crc = (crc << 1) ^ 0x1021;
             } else {
@@ -102,7 +123,7 @@ static int check(bool is_crc, const unsigned char *buf, int sz)
 {
     if (is_crc) {
         unsigned short crc = crc16_ccitt(buf, sz);
-        unsigned short tcrc = (buf[sz] << 8) + buf[sz + 1];
+        unsigned short tcrc = (buf[sz] << CHAR_BIT) + buf[sz + 1];
         if (crc == tcrc) {
             return 1;
         }
@@ -130,7 +151,7 @@ STATIC int read_with_echo(UINT32 timeout_ms)
 {
     int c = uart_read(LOS_MS2Tick(timeout_ms));
     if (c > 0) {
-        if (0x7f == c) {
+        if (c == 0x7f) {
             uart_send_byte(UART1, 0x08);
             uart_send_byte(UART1, ' ');
             c = 0x08;
@@ -147,13 +168,13 @@ static void _outbyte(int c)
 
 static void flushinput(void)
 {
-    while (_inbyte(((DLY_1S)*3) >> 1) >= 0) {
+    while (_inbyte(((DLY_1S)*FLUSH_INPUT_NBYTES) >> 1) >= 0) {
     }
 }
 
-typedef void (*XModemReceiveCB)(uint8_t *buf, size_t addr, size_t len, void *arg);
+typedef void (*XModemReceiveCB)(uint8_t *buf, size_t addr, size_t len, UINT8 *arg);
 
-int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *arg)
+int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg)
 {
     unsigned char *p;
     int bufsz, crc = 0;
@@ -163,20 +184,21 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *ar
     int retry, retrans = MAXRETRANS;
 
     for (;;) {
-        for (retry = 0; retry < 16; ++retry) {
+        for (retry = 0; retry < MAX_BYTE_RETRIES; ++retry) {
             if (trychar) {
                 _outbyte(trychar);
             }
             if ((c = _inbyte((DLY_1S) << 1)) >= 0) {
                 switch (c) {
                     case SOH: {
-                        bufsz = 128;
+                        bufsz = XMODEM_PACKET_SIZE;
                         goto start_recv;
                     }
                     case STX: {
-                        bufsz = 1024;
+                        bufsz = XMODEM1K_PACKET_SIZE;
                         goto start_recv;
                     }
+
                     case EOT: {
                         flushinput();
                         _outbyte(ACK);
@@ -186,7 +208,7 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *ar
                         if ((c = _inbyte(DLY_1S)) == CAN) {
                             flushinput();
                             _outbyte(ACK);
-                            return -1; /* canceled by remote */
+                            return XMODEM_ERROR_CANCEL; /* canceled by remote */
                         }
                         break;
                     }
@@ -204,7 +226,7 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *ar
         _outbyte(CAN);
         _outbyte(CAN);
         _outbyte(CAN);
-        return -2; /* sync error */
+        return XMODEM_ERROR_SYNC_ERROR; /* sync error */
 
     start_recv:
         if (trychar == 'C') {
@@ -221,15 +243,16 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *ar
             goto reject;
         }
 
-        if (xbuff[1] == (unsigned char)(~xbuff[2]) &&
-            (xbuff[1] == packetno || xbuff[1] == (unsigned char)packetno - 1) && check(crc, &xbuff[3], bufsz)) {
+        if (xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)(~xbuff[XMODEM_BLOCK_NUMBER_INV]) &&
+            (xbuff[XMODEM_BLOCK_NUMBER] == packetno || xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)packetno - 1) &&
+            check(crc, &xbuff[XMODEM_HEADER_SIZE], bufsz)) {
             if (xbuff[1] == packetno) {
                 int count = destsz - len;
                 if (count > bufsz) {
                     count = bufsz;
                 }
                 if (count > 0) {
-                    cb(&xbuff[3], len, count, arg);
+                    cb(&xbuff[XMODEM_HEADER_SIZE], len, count, arg);
                     len += count;
                 }
                 ++packetno;
@@ -240,7 +263,7 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *ar
                 _outbyte(CAN);
                 _outbyte(CAN);
                 _outbyte(CAN);
-                return -3; /* too many retry error */
+                return XMODEM_ERROR_RETRANS_LIMIT; /* too many retry error */
             }
             _outbyte(ACK);
             continue;
@@ -257,17 +280,17 @@ STATIC ptrdiff_t ReadLine(char *buf, size_t bufLen)
 
     for (i = 0; i < bufLen;) {
         char c;
-        if ((c = read_with_echo(5000)) < 0) {
+        if ((c = read_with_echo(READ_BYTE_TIMEOUT_MS)) < 0) {
             return COMMAND_TYPE_ERROR_TIMEOUT;
         }
 
-        if ('\r' == c) {
+        if (c == '\r') {
             continue;
         }
-        if ('\n' == c) {
+        if (c == '\n') {
             break;
         }
-        if ((0x08 == c)) {
+        if (c == 0x08) {
             if (i > 0) {
                 buf[--i] = '\0';
             }
@@ -285,11 +308,11 @@ STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
     if ((c = read_with_echo(LOS_WAIT_FOREVER)) < 0) {
         return COMMAND_TYPE_ERROR_TIMEOUT;
     }
-    if ('{' != c) {
+    if (c != '{') {
         return COMMAND_TYPE_ERROR_PREAMBLE;
     }
 
-    if ((c = read_with_echo(5000)) < 0) {
+    if ((c = read_with_echo(READ_BYTE_TIMEOUT_MS)) < 0) {
         return COMMAND_TYPE_ERROR_TIMEOUT;
     }
 
@@ -346,26 +369,26 @@ STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
     if ((COMMAND_TYPE_UPLOAD == cmd) || (COMMAND_TYPE_PRINT == cmd) || (COMMAND_TYPE_HASH_SHA256 == cmd)) {
         char *p;
         errno = ENOERR;
-        *arg1 = strtoul(buf, &p, 10);
-        if (((0 == *arg1) || (ULONG_MAX == *arg1)) && (ENOERR != errno)) {
+        *arg1 = strtoul(buf, &p, RADIX_10);
+        if (((*arg1 == 0) || (ULONG_MAX == *arg1)) && (ENOERR != errno)) {
             printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
             return COMMAND_TYPE_ERROR_WRONG_ARGS;
         }
-        *arg2 = strtoul(p, &p, 10);
-        if (((0 == *arg2) || (ULONG_MAX == *arg2)) && (ENOERR != errno)) {
+        *arg2 = strtoul(p, &p, RADIX_10);
+        if (((*arg2 == 0) || (ULONG_MAX == *arg2)) && (ENOERR != errno)) {
             printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
             *arg2 = UINT32_MAX;
         }
     } else if (COMMAND_TYPE_CANCEL == cmd) {
-        if (0 != strcmp("ancel", buf)) {
+        if (strcmp("ancel", buf) != 0) {
             return COMMAND_TYPE_ERROR_WRONG_COMMAND;
         }
     } else if (COMMAND_TYPE_RESTART == cmd) {
-        if (0 != strcmp("estart", buf)) {
+        if (strcmp("estart", buf) != 0) {
             return COMMAND_TYPE_ERROR_WRONG_COMMAND;
         }
     } else if (COMMAND_TYPE_ROLLBACK == cmd) {
-        if (0 != strcmp("ack", buf)) {
+        if (strcmp("ack", buf) != 0) {
             return COMMAND_TYPE_ERROR_WRONG_COMMAND;
         }
     } else if (COMMAND_TYPE_DEBUG == cmd) {
@@ -375,13 +398,13 @@ STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
         }
         char *p;
         errno = ENOERR;
-        UINT32 addr = strtoul(buf + 1, &p, 10);
-        if (((0 == addr) || (ULONG_MAX == addr)) && (ENOERR != errno)) {
+        UINT32 addr = strtoul(buf + 1, &p, RADIX_10);
+        if (((addr == 0) || (ULONG_MAX == addr)) && (ENOERR != errno)) {
             printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
             return COMMAND_TYPE_ERROR_WRONG_ARGS;
         }
-        UINT32 sz = strtoul(p, &p, 10);
-        if (((0 == sz) || (ULONG_MAX == sz)) && (ENOERR != errno)) {
+        UINT32 sz = strtoul(p, &p, RADIX_10);
+        if (((sz == 0) || (ULONG_MAX == sz)) && (ENOERR != errno)) {
             printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
             sz = 1;
         }
@@ -400,7 +423,7 @@ STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
             free(p);
         }
     } else if (COMMAND_TYPE_SIGN == cmd) {
-        if (0 != strcmp("ign", buf)) {
+        if (strcmp("ign", buf) != 0) {
             return COMMAND_TYPE_ERROR_WRONG_COMMAND;
         }
     }
@@ -424,9 +447,9 @@ typedef struct {
     AppSha256Context sha256;
 } xmodemReceiveCBArg;
 
-void xmodemReceiveCB(uint8_t *buf, size_t addr, size_t len, void *_arg)
+void xmodemReceiveCB(uint8_t *buf, size_t addr, size_t len, UINT8 *_arg)
 {
-    xmodemReceiveCBArg *arg = _arg;
+    xmodemReceiveCBArg *arg = (xmodemReceiveCBArg *)_arg;
     int to_print = len;
     if (to_print > 0) {
         printf("Received[%d %d %u %d]: \"", arg->sz, arg->start, addr, to_print);
@@ -455,7 +478,7 @@ STATIC ptrdiff_t ReadSign(UINT8 *sign, unsigned len)
             char hex[3] = {buf[i], buf[i + 1], '\0'};
             errno = ENOERR;
             UINT32 num = strtoul(hex, NULL, 16);
-            if (((0 == num) || (ULONG_MAX == num)) && (ENOERR != errno)) {
+            if (((num == 0) || (ULONG_MAX == num)) && (ENOERR != errno)) {
                 printf(" === %s:%d errno: %d \"%s\"\r\n", __func__, __LINE__, errno, hex);
                 return -1;
             }
@@ -512,7 +535,7 @@ STATIC VOID OTA_TestThread(VOID)
 
             unsigned rem = bufLen % XMODEM_BUF_SIZE;
 
-            if (0 != rem) {
+            if (rem != 0) {
                 if (OHOS_SUCCESS == HotaRead(start + bufLen - rem, rem, workBuf)) {
                 }
                 printf("Read[%u %u %u %u]: {", start, start + bufLen - rem, rem, bufLen);
@@ -537,7 +560,7 @@ STATIC VOID OTA_TestThread(VOID)
 
             unsigned rem = bufLen % XMODEM_BUF_SIZE;
 
-            if (0 != rem) {
+            if (rem != 0) {
                 if (OHOS_SUCCESS == HotaRead(start + bufLen - rem, rem, workBuf)) {
                 }
                 AppSha256Update(&sha256, workBuf, rem);
@@ -610,7 +633,7 @@ VOID OtaUartTestInit(VOID)
     TSK_INIT_PARAM_S task_param = {0};
 
     task_param.pfnTaskEntry = (TSK_ENTRY_FUNC)OTA_TestThread;
-    task_param.uwStackSize = 1024 * 16;
+    task_param.uwStackSize = OTA_THREAD_STACK_SIZE;
     task_param.pcName = "OTA_TestThread";
     task_param.usTaskPrio = OTA_UART_TASK_PRIO;
     ret = LOS_TaskCreate(&task_id, &task_param);
