@@ -42,8 +42,7 @@
 #include "app.h"
 #include "uni_ble.h"
 
-#define LED_TASK_PRIORITY LOSCFG_BASE_CORE_TSK_DEFAULT_PRIO
-#define PROTO_TASK_PRIORITY (OS_TASK_PRIORITY_LOWEST-1)
+#define BLE_TASK_PRIORITY (OS_TASK_PRIORITY_HIGHEST+1)
 
 static void BleTask(void)
 {
@@ -96,7 +95,7 @@ void BleSampleInit(void)
     taskParam.uwArg = 0;
     taskParam.uwStackSize = LOSCFG_BASE_CORE_TSK_DEFAULT_STACK_SIZE;
     taskParam.pcName = "BleTask";
-    taskParam.usTaskPrio = PROTO_TASK_PRIORITY;
+    taskParam.usTaskPrio = BLE_TASK_PRIORITY;
     ret = LOS_TaskCreate(&taskId, &taskParam);
     if (ret != LOS_OK) {
         HILOG_ERROR(HILOG_MODULE_APP, "ret of LOS_TaskCreate(BleTask) = %#x", ret);
