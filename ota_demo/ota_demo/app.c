@@ -75,7 +75,9 @@
 
 #define OTA_THREAD_STACK_SIZE (1024 * 16)
 
+#define RADIX_16 16
 #define RADIX_10 10
+#define HEX_IN_BYTE 2
 
 typedef enum {
     COMMAND_TYPE_ERROR_TIMEOUT = -1,
@@ -470,14 +472,14 @@ STATIC ptrdiff_t ReadSign(UINT8 *sign, unsigned len)
             return res;
         }
 
-        if (nbytes + (res / 2) > len) {
+        if (nbytes + (res / HEX_IN_BYTE) > len) {
             return -1;
         }
 
-        for (size_t i = 0; i < res; i += 2) {
+        for (size_t i = 0; i < res; i += HEX_IN_BYTE) {
             char hex[3] = {buf[i], buf[i + 1], '\0'};
             errno = ENOERR;
-            UINT32 num = strtoul(hex, NULL, 16);
+            UINT32 num = strtoul(hex, NULL, RADIX_16);
             if (((num == 0) || (ULONG_MAX == num)) && (ENOERR != errno)) {
                 printf(" === %s:%d errno: %d \"%s\"\r\n", __func__, __LINE__, errno, hex);
                 return -1;

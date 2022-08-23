@@ -22,7 +22,7 @@ b91_firmware("ota_demo") {
   ]
 
   deps = [
-    "//build/lite:ohos",
     "ota_demo",
+    "//build/lite:ohos",
   ]
 }
