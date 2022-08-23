@@ -27,9 +27,7 @@ config("myapp_config") {
     "$ohos_third_party_dir/mbedtls/include",
   ]
 
-  configs = [
-    "//device/soc/telink/b91:B91_config",
-  ]
+  configs = [ "//device/soc/telink/b91:B91_config" ]
 }
 
 source_set("myapp_inner") {
@@ -57,9 +55,7 @@ source_set("myapp_inner") {
 }
 
 static_library("ota_demo") {
-  deps = [
-    ":myapp_inner",
-  ]
+  deps = [ ":myapp_inner" ]
 
   configs += [ ":myapp_config" ]
 }

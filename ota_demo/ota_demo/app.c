@@ -59,7 +59,7 @@
 #define CAN   0x18
 #define CTRLZ 0x1A
 
-#define DLY_1S     1000
+#define DLY_1S 1000
 #define MAXRETRANS 25
 #define MAX_BYTE_RETRIES 16
 #define FLUSH_INPUT_NBYTES 3
@@ -100,7 +100,15 @@ enum {
     XMODEM_ERROR_CANCEL = -1,
     XMODEM_ERROR_SYNC_ERROR = -2,
     XMODEM_ERROR_RETRANS_LIMIT = -3,
+//    XMODEM_PACKET_START = -4,
+    XMODEM_PACKET_END = -5,
 };
+
+typedef struct {
+    int sz, start;
+
+    AppSha256Context sha256;
+} xmodemReceiveCBArg;
 
 unsigned short crc16_ccitt(const unsigned char *buf, int len)
 {
@@ -176,10 +184,76 @@ static void flushinput(void)
 
 typedef void (*XModemReceiveCB)(uint8_t *buf, size_t addr, size_t len, UINT8 *arg);
 
+static int get_first_byte(int *c)
+{
+    //    int c;
+    if ((*c = _inbyte((DLY_1S) << 1)) >= 0) {
+        switch (*c) {
+            case SOH: {
+                return XMODEM_PACKET_SIZE;
+            }
+            case STX: {
+                return XMODEM1K_PACKET_SIZE;
+            }
+
+            case EOT: {
+                flushinput();
+                _outbyte(ACK);
+                return XMODEM_PACKET_END;
+            }
+            case CAN: {
+                if ((*c = _inbyte(DLY_1S)) == CAN) {
+                    flushinput();
+                    _outbyte(ACK);
+                    return XMODEM_ERROR_CANCEL; /* canceled by remote */
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int packet_check(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg, int bufsz, unsigned char *packetno,
+                        int *retrans, bool use_src, int *len)
+{
+    if (xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)(~xbuff[XMODEM_BLOCK_NUMBER_INV]) &&
+        (xbuff[XMODEM_BLOCK_NUMBER] == *packetno || xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)*packetno - 1) &&
+        check(use_src, &xbuff[XMODEM_HEADER_SIZE], bufsz)) {
+        if (xbuff[1] == *packetno) {
+            int count = destsz - *len;
+            if (count > bufsz) {
+                count = bufsz;
+            }
+            if (count > 0) {
+                cb(&xbuff[XMODEM_HEADER_SIZE], *len, count, arg);
+                *len += count;
+            }
+            ++*packetno;
+            *retrans = MAXRETRANS + 1;
+        }
+        if (--*retrans <= 0) {
+            flushinput();
+            _outbyte(CAN);
+            _outbyte(CAN);
+            _outbyte(CAN);
+            return XMODEM_ERROR_RETRANS_LIMIT; /* too many retry error */
+        }
+        _outbyte(ACK);
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg)
 {
     unsigned char *p;
-    int bufsz, crc = 0;
+    int bufsz, use_src = 0;
     unsigned char trychar = 'C';
     unsigned char packetno = 1;
     int c, len = 0;
@@ -190,89 +264,46 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *a
             if (trychar) {
                 _outbyte(trychar);
             }
-            if ((c = _inbyte((DLY_1S) << 1)) >= 0) {
-                switch (c) {
-                    case SOH: {
-                        bufsz = XMODEM_PACKET_SIZE;
-                        goto start_recv;
-                    }
-                    case STX: {
-                        bufsz = XMODEM1K_PACKET_SIZE;
-                        goto start_recv;
-                    }
-
-                    case EOT: {
-                        flushinput();
-                        _outbyte(ACK);
-                        return len; /* normal end */
-                    }
-                    case CAN: {
-                        if ((c = _inbyte(DLY_1S)) == CAN) {
-                            flushinput();
-                            _outbyte(ACK);
-                            return XMODEM_ERROR_CANCEL; /* canceled by remote */
-                        }
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
+            bufsz = get_first_byte(&c);
+            if (bufsz == XMODEM_PACKET_END) {
+                return len;
+            } else if (bufsz < 0) {
+                return bufsz;
+            } else if (bufsz == 0) {
+                if (trychar == 'C') {
+                    trychar = NAK;
+                    continue;
                 }
+                flushinput();
+                _outbyte(CAN);
+                _outbyte(CAN);
+                _outbyte(CAN);
+                return XMODEM_ERROR_SYNC_ERROR; /* sync error */
             }
         }
-        if (trychar == 'C') {
-            trychar = NAK;
-            continue;
-        }
-        flushinput();
-        _outbyte(CAN);
-        _outbyte(CAN);
-        _outbyte(CAN);
-        return XMODEM_ERROR_SYNC_ERROR; /* sync error */
 
-    start_recv:
         if (trychar == 'C') {
-            crc = 1;
+            use_src = 1;
         }
         trychar = 0;
         p = xbuff;
         *p++ = c;
 
-        INT32 to_read = (bufsz + (crc ? 1 : 0) + 3);
+        INT32 to_read = (bufsz + (use_src ? 1 : 0) + 3);
         INT32 nread = uart_read_buf(LOS_MS2Tick(DLY_1S * 10), p, to_read);
         if (nread < to_read) {
             printf(" === %s:%d to_read: %d nread: %d\r\n", __func__, __LINE__, to_read, nread);
-            goto reject;
-        }
-
-        if (xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)(~xbuff[XMODEM_BLOCK_NUMBER_INV]) &&
-            (xbuff[XMODEM_BLOCK_NUMBER] == packetno || xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)packetno - 1) &&
-            check(crc, &xbuff[XMODEM_HEADER_SIZE], bufsz)) {
-            if (xbuff[1] == packetno) {
-                int count = destsz - len;
-                if (count > bufsz) {
-                    count = bufsz;
-                }
-                if (count > 0) {
-                    cb(&xbuff[XMODEM_HEADER_SIZE], len, count, arg);
-                    len += count;
-                }
-                ++packetno;
-                retrans = MAXRETRANS + 1;
-            }
-            if (--retrans <= 0) {
+            flushinput();
+            _outbyte(NAK);
+        } else {
+            int tmp = packet_check(xbuff, destsz, cb, arg, bufsz, packetno, &retrans, use_src, len);
+            if (tmp == 1) {
                 flushinput();
-                _outbyte(CAN);
-                _outbyte(CAN);
-                _outbyte(CAN);
-                return XMODEM_ERROR_RETRANS_LIMIT; /* too many retry error */
+                _outbyte(NAK);
+            } else if (tmp < 0) {
+                return tmp;
             }
-            _outbyte(ACK);
-            continue;
         }
-    reject:
-        flushinput();
-        _outbyte(NAK);
     }
 }
 
@@ -442,12 +473,6 @@ void OtaStatusCallBack(HotaStatus status)
 {
     printf(" === %s:%d status: %d\r\n", __func__, __LINE__, status);
 }
-
-typedef struct {
-    int sz, start;
-
-    AppSha256Context sha256;
-} xmodemReceiveCBArg;
 
 void xmodemReceiveCB(uint8_t *buf, size_t addr, size_t len, UINT8 *_arg)
 {
