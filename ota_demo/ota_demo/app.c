@@ -100,8 +100,7 @@ enum {
     XMODEM_ERROR_CANCEL = -1,
     XMODEM_ERROR_SYNC_ERROR = -2,
     XMODEM_ERROR_RETRANS_LIMIT = -3,
-//    XMODEM_PACKET_START = -4,
-    XMODEM_PACKET_END = -5,
+    XMODEM_PACKET_END = -4,
 };
 
 typedef struct {
@@ -186,7 +185,6 @@ typedef void (*XModemReceiveCB)(uint8_t *buf, size_t addr, size_t len, UINT8 *ar
 
 static int get_first_byte(int *c)
 {
-    //    int c;
     if ((*c = _inbyte((DLY_1S) << 1)) >= 0) {
         switch (*c) {
             case SOH: {
@@ -253,7 +251,7 @@ static int packet_check(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UI
 int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg)
 {
     unsigned char *p;
-    int bufsz, use_src = 0;
+    int bufsz = 0, use_src = 0;
     unsigned char trychar = 'C';
     unsigned char packetno = 1;
     int c, len = 0;
@@ -269,17 +267,23 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *a
                 return len;
             } else if (bufsz < 0) {
                 return bufsz;
-            } else if (bufsz == 0) {
-                if (trychar == 'C') {
-                    trychar = NAK;
-                    continue;
-                }
-                flushinput();
-                _outbyte(CAN);
-                _outbyte(CAN);
-                _outbyte(CAN);
-                return XMODEM_ERROR_SYNC_ERROR; /* sync error */
+            } else if (bufsz > 0) {
+                break;
             }
+            else if (bufsz == 0) {
+            }
+        }
+
+        if (bufsz == 0) {
+            if (trychar == 'C') {
+                trychar = NAK;
+                continue;
+            }
+            flushinput();
+            _outbyte(CAN);
+            _outbyte(CAN);
+            _outbyte(CAN);
+            return XMODEM_ERROR_SYNC_ERROR; /* sync error */
         }
 
         if (trychar == 'C') {
@@ -296,7 +300,7 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *a
             flushinput();
             _outbyte(NAK);
         } else {
-            int tmp = packet_check(xbuff, destsz, cb, arg, bufsz, packetno, &retrans, use_src, len);
+            int tmp = packet_check(xbuff, destsz, cb, arg, bufsz, &packetno, &retrans, use_src, &len);
             if (tmp == 1) {
                 flushinput();
                 _outbyte(NAK);
