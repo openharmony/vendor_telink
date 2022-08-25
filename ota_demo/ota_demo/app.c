@@ -1,4 +1,4 @@
-/******************************************************************************
+﻿/******************************************************************************
  * Copyright (c) 2022 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
  * All rights reserved.
  *
@@ -108,6 +108,11 @@ typedef struct {
 
     AppSha256Context sha256;
 } xmodemReceiveCBArg;
+
+typedef struct {
+    UINT8 hash[32];
+    UINT8 *workBuf;
+} OTA_AppState;
 
 unsigned short crc16_ccitt(const unsigned char *buf, int len)
 {
@@ -248,7 +253,7 @@ static int packet_check(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UI
     }
 }
 
-int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg)
+int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *arg)
 {
     unsigned char *p;
     int bufsz = 0, use_src = 0;
@@ -339,7 +344,227 @@ STATIC ptrdiff_t ReadLine(char *buf, size_t bufLen)
     return i;
 }
 
-STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
+void OtaErrorCallBack(HotaErrorCode errorCode)
+{
+    printf(" === %s:%d errorCode: %d\r\n", __func__, __LINE__, errorCode);
+}
+
+void OtaStatusCallBack(HotaStatus status)
+{
+    printf(" === %s:%d status: %d\r\n", __func__, __LINE__, status);
+}
+
+void xmodemReceiveCB(uint8_t *buf, size_t addr, size_t len, UINT8 *_arg)
+{
+    xmodemReceiveCBArg *arg = (xmodemReceiveCBArg *)_arg;
+    int to_print = len;
+    if (to_print > 0) {
+        printf("Received[%d %d %u %d]: \"", arg->sz, arg->start, addr, to_print);
+        printf("\"\r\n");
+        AppSha256Update(&arg->sha256, buf, len);
+        unsigned int offset = (unsigned)(arg->start > 0 ? arg->start : 0) + addr;
+        HotaWrite(buf, offset, len);
+    }
+}
+
+STATIC ptrdiff_t ReadSign(UINT8 *sign, unsigned len)
+{
+    char buf[32];
+    size_t nbytes = 0;
+    while (nbytes < len) {
+        ptrdiff_t res = ReadLine(buf, sizeof(buf));
+        if (res < 0) {
+            return res;
+        }
+
+        if (nbytes + (res / HEX_IN_BYTE) > len) {
+            return -1;
+        }
+
+        for (size_t i = 0; i < res; i += HEX_IN_BYTE) {
+            char hex[3] = {buf[i], buf[i + 1], '\0'};
+            errno = ENOERR;
+            UINT32 num = strtoul(hex, NULL, RADIX_16);
+            printf("Got: '%02x'\r\n", num);
+            if (((num == 0) || (ULONG_MAX == num)) && (ENOERR != errno)) {
+                printf(" === %s:%d errno: %d \"%s\"\r\n", __func__, __LINE__, errno, hex);
+                return -1;
+            }
+
+            sign[nbytes++] = num;
+        }
+
+        if (res < sizeof(buf)) {
+            break;
+        }
+    }
+
+    return nbytes;
+}
+
+STATIC VOID CommandRunUpload(int arg1, int arg2, OTA_AppState *state)
+{
+    xmodemReceiveCBArg arg = {arg1, arg2, {0}};
+    AppSha256Init(&arg.sha256);
+    int res = xmodemReceive(state->workBuf, arg1, xmodemReceiveCB, &arg);
+    AppSha256Finish(&arg.sha256, state->hash);
+    printf("sha256: ");
+    for (size_t i = 0; i < sizeof(state->hash); ++i) {
+        printf("%02x", state->hash[i]);
+    }
+    printf("\r\n");
+}
+
+STATIC VOID CommandRunPrint(int arg1, int arg2, OTA_AppState *state)
+{
+    unsigned start = arg1;  // & ~0xFF; //(sz / 256) * 256;
+    unsigned bufLen = (unsigned)(arg2 >= 0 ? arg2 : 256);
+
+    for (unsigned offset = 0, next = XMODEM_BUF_SIZE; next < bufLen; offset = next, next += XMODEM_BUF_SIZE) {
+        if (OHOS_SUCCESS == HotaRead(start + offset, XMODEM_BUF_SIZE, state->workBuf)) {
+        }
+        printf("Read[%u %u %u %u]: {", start, start + offset, XMODEM_BUF_SIZE, bufLen);
+        for (size_t i = 0; i < XMODEM_BUF_SIZE; ++i) {
+            printf("%02x", state->workBuf[i]);
+        }
+        printf("}\r\n");
+    }
+    unsigned rem = bufLen % XMODEM_BUF_SIZE;
+
+    if (rem != 0) {
+        if (OHOS_SUCCESS == HotaRead(start + bufLen - rem, rem, state->workBuf)) {
+        }
+        printf("Read[%u %u %u %u]: {", start, start + bufLen - rem, rem, bufLen);
+        for (size_t i = 0; i < rem; ++i) {
+            printf("%02x", state->workBuf[i]);
+        }
+        printf("}\r\n");
+    }
+}
+
+STATIC VOID CommandRunHashSha256(int arg1, int arg2, OTA_AppState *state)
+{
+    unsigned start = arg1;
+    unsigned bufLen = (unsigned)(arg2 >= 0 ? arg2 : 256);
+    uint8_t hashLocal[32];
+
+    AppSha256Context sha256;
+    AppSha256Init(&sha256);
+
+    for (unsigned offset = 0, next = XMODEM_BUF_SIZE; next < bufLen; offset = next, next += XMODEM_BUF_SIZE) {
+        if (OHOS_SUCCESS == HotaRead(start + offset, XMODEM_BUF_SIZE, state->workBuf)) {
+        }
+        AppSha256Update(&sha256, state->workBuf, XMODEM_BUF_SIZE);
+    }
+
+    unsigned rem = bufLen % XMODEM_BUF_SIZE;
+
+    if (rem != 0) {
+        if (OHOS_SUCCESS == HotaRead(start + bufLen - rem, rem, state->workBuf)) {
+        }
+        AppSha256Update(&sha256, state->workBuf, rem);
+    }
+
+    AppSha256Finish(&sha256, hashLocal);
+    printf("sha256: ");
+    for (size_t i = 0; i < sizeof(hashLocal); ++i) {
+        printf("%02x", hashLocal[i]);
+    }
+    printf("\r\n");
+}
+
+STATIC VOID CommandRunSign(OTA_AppState *state)
+{
+    UINT8 sign[128];
+    ptrdiff_t len = ReadSign(sign, sizeof(sign));
+    if (len < 0) {
+        printf(" === ERROR %s:%d res: %d\r\n", __func__, __LINE__, len);
+    } else {
+        mbedtls_pk_context context;
+        uint32 length = 0;
+
+        mbedtls_pk_init(&context);
+        uint8 *keyBuf = HotaGetPubKey(&length);
+        if (keyBuf == NULL) {
+            printf("Get key fail\r\n");
+        }
+
+        int32 parseRet = mbedtls_pk_parse_public_key(&context, keyBuf, length);
+        if (parseRet != 0) {
+            printf("Parse public key failed.\r\n");
+        } else {
+            int ret;
+
+            mbedtls_entropy_context entropy;
+            mbedtls_rsa_set_padding(mbedtls_pk_rsa(context), MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_SHA256);
+            mbedtls_entropy_init(&entropy);
+            if ((ret = mbedtls_rsa_pkcs1_verify(mbedtls_pk_rsa(context), NULL, NULL, MBEDTLS_RSA_PUBLIC,
+                                                MBEDTLS_MD_SHA256, sizeof(state->hash), state->hash, sign)) != 0) {
+                printf("Sign check fail!\r\n");
+            } else {
+                printf("Sign check success!\r\n");
+            }
+            mbedtls_pk_free(&context);
+        }
+    }
+}
+
+STATIC VOID CommandRunCancel(OTA_AppState *state)
+{
+    HotaCancel();
+    (VOID) HotaInit(OtaErrorCallBack, OtaStatusCallBack);
+    (VOID) HotaSetPackageType(NOT_USE_DEFAULT_PKG);
+}
+
+STATIC VOID CommandRunRestart(OTA_AppState *state)
+{
+    int ret = HotaRestart();
+    printf("HotaRestart() =  %d\r\n", ret);
+}
+
+STATIC VOID CommandRunRollback(OTA_AppState *state)
+{
+    int HotaHalRollback(void);
+    int ret = HotaHalRollback();
+    printf("HotaHalRollback() =  %d\r\n", ret);
+}
+
+STATIC int CommandRunDebug(char *buf, OTA_AppState *state)
+{
+    char c = buf[0];
+    if (c != 'm' && c != 'f') {
+        return COMMAND_TYPE_ERROR_WRONG_COMMAND;
+    }
+    char *p;
+    errno = ENOERR;
+    UINT32 addr = strtoul(buf + 1, &p, RADIX_10);
+    if (((addr == 0) || (ULONG_MAX == addr)) && (ENOERR != errno)) {
+        printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
+        return COMMAND_TYPE_ERROR_WRONG_ARGS;
+    }
+    UINT32 sz = strtoul(p, &p, RADIX_10);
+    if (((sz == 0) || (ULONG_MAX == sz)) && (ENOERR != errno)) {
+        printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
+        sz = 1;
+    }
+    if (c == 'm') {
+        p = (char *)addr;
+    } else if (c == 'f') {
+        p = malloc(sz);
+        flash_read_page(addr, sz, p);
+    }
+    printf("Debug(%c): ", c);
+    for (size_t i = 0; i < sz; ++i) {
+        printf("%02x", p[i]);
+    }
+    printf("\r\n");
+    if (c == 'f') {
+        free(p);
+    }
+    return COMMAND_TYPE_DEBUG;
+}
+
+STATIC CommandType CommandProcess(OTA_AppState *state)
 {
     int c;
     if ((c = read_with_echo(LOS_WAIT_FOREVER)) < 0) {
@@ -385,8 +610,8 @@ STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
             break;
         }
         case 's': {
-            cmd = COMMAND_TYPE_SIGN;
-            return cmd;
+            CommandRunSign(state);
+            return COMMAND_TYPE_SIGN;
         }
         default: {
             return COMMAND_TYPE_ERROR_WRONG_COMMAND;
@@ -400,129 +625,44 @@ STATIC CommandType CommandProcess(UINT32 *arg1, UINT32 *arg2)
         return res;
     }
 
-    *arg1 = UINT32_MAX;
-    *arg2 = UINT32_MAX;
-
     if ((COMMAND_TYPE_UPLOAD == cmd) || (COMMAND_TYPE_PRINT == cmd) || (COMMAND_TYPE_HASH_SHA256 == cmd)) {
-        char *p;
-        errno = ENOERR;
-        *arg1 = strtoul(buf, &p, RADIX_10);
-        if (((*arg1 == 0) || (ULONG_MAX == *arg1)) && (ENOERR != errno)) {
-            printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
-            return COMMAND_TYPE_ERROR_WRONG_ARGS;
-        }
-        *arg2 = strtoul(p, &p, RADIX_10);
-        if (((*arg2 == 0) || (ULONG_MAX == *arg2)) && (ENOERR != errno)) {
-            printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
-            *arg2 = UINT32_MAX;
-        }
-    } else if (COMMAND_TYPE_CANCEL == cmd) {
-        if (strcmp("ancel", buf) != 0) {
-            return COMMAND_TYPE_ERROR_WRONG_COMMAND;
+            char *p;
+            errno = ENOERR;
+            UINT32 arg1 = strtoul(buf, &p, RADIX_10);
+            if (((arg1 == 0) || (ULONG_MAX == arg1)) && (ENOERR != errno)) {
+                printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
+                return COMMAND_TYPE_ERROR_WRONG_ARGS;
+            }
+            UINT32 arg2 = strtoul(p, &p, RADIX_10);
+            if (((arg2 == 0) || (ULONG_MAX == arg2)) && (ENOERR != errno)) {
+                printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
+                arg2 = UINT32_MAX;
+            }
+
+            if (cmd == COMMAND_TYPE_UPLOAD) {
+                CommandRunUpload(arg1, arg2, state);
+            } else if (cmd == COMMAND_TYPE_PRINT) {
+                CommandRunPrint(arg1, arg2, state);
+            } else if (cmd == COMMAND_TYPE_HASH_SHA256) {
+                CommandRunHashSha256(arg1, arg2, state);
+            }
+    } else if (cmd == COMMAND_TYPE_CANCEL) {
+        if (strcmp("ancel", buf) == 0) {
+            CommandRunCancel(state);
         }
     } else if (COMMAND_TYPE_RESTART == cmd) {
-        if (strcmp("estart", buf) != 0) {
-            return COMMAND_TYPE_ERROR_WRONG_COMMAND;
+        if (strcmp("estart", buf) == 0) {
+            CommandRunRestart(state);
         }
     } else if (COMMAND_TYPE_ROLLBACK == cmd) {
-        if (strcmp("ack", buf) != 0) {
-            return COMMAND_TYPE_ERROR_WRONG_COMMAND;
+        if (strcmp("ack", buf) == 0) {
+            CommandRunRollback(state);
         }
     } else if (COMMAND_TYPE_DEBUG == cmd) {
-        c = buf[0];
-        if (c != 'm' && c != 'f') {
-            return COMMAND_TYPE_ERROR_WRONG_COMMAND;
-        }
-        char *p;
-        errno = ENOERR;
-        UINT32 addr = strtoul(buf + 1, &p, RADIX_10);
-        if (((addr == 0) || (ULONG_MAX == addr)) && (ENOERR != errno)) {
-            printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
-            return COMMAND_TYPE_ERROR_WRONG_ARGS;
-        }
-        UINT32 sz = strtoul(p, &p, RADIX_10);
-        if (((sz == 0) || (ULONG_MAX == sz)) && (ENOERR != errno)) {
-            printf(" === %s:%d errno: %d\r\n", __func__, __LINE__, errno);
-            sz = 1;
-        }
-        if (c == 'm') {
-            p = (const char *)addr;
-        } else if (c == 'f') {
-            p = malloc(sz);
-            flash_read_page(addr, sz, p);
-        }
-        printf("Debug(%c): ", c);
-        for (size_t i = 0; i < sz; ++i) {
-            printf("%02x", p[i]);
-        }
-        printf("\r\n");
-        if (c == 'f') {
-            free(p);
-        }
-    } else if (COMMAND_TYPE_SIGN == cmd) {
-        if (strcmp("ign", buf) != 0) {
-            return COMMAND_TYPE_ERROR_WRONG_COMMAND;
-        }
+        return CommandRunDebug(buf, state);
     }
 
     return cmd;
-}
-
-void OtaErrorCallBack(HotaErrorCode errorCode)
-{
-    printf(" === %s:%d errorCode: %d\r\n", __func__, __LINE__, errorCode);
-}
-
-void OtaStatusCallBack(HotaStatus status)
-{
-    printf(" === %s:%d status: %d\r\n", __func__, __LINE__, status);
-}
-
-void xmodemReceiveCB(uint8_t *buf, size_t addr, size_t len, UINT8 *_arg)
-{
-    xmodemReceiveCBArg *arg = (xmodemReceiveCBArg *)_arg;
-    int to_print = len;
-    if (to_print > 0) {
-        printf("Received[%d %d %u %d]: \"", arg->sz, arg->start, addr, to_print);
-        printf("\"\r\n");
-        AppSha256Update(&arg->sha256, buf, len);
-        unsigned int offset = (unsigned)(arg->start > 0 ? arg->start : 0) + addr;
-        HotaWrite(buf, offset, len);
-    }
-}
-
-STATIC ptrdiff_t ReadSign(UINT8 *sign, unsigned len)
-{
-    char buf[32];
-    size_t nbytes = 0;
-    while (nbytes < len) {
-        ptrdiff_t res = ReadLine(buf, sizeof(buf));
-        if (res < 0) {
-            return res;
-        }
-
-        if (nbytes + (res / HEX_IN_BYTE) > len) {
-            return -1;
-        }
-
-        for (size_t i = 0; i < res; i += HEX_IN_BYTE) {
-            char hex[3] = {buf[i], buf[i + 1], '\0'};
-            errno = ENOERR;
-            UINT32 num = strtoul(hex, NULL, RADIX_16);
-            if (((num == 0) || (ULONG_MAX == num)) && (ENOERR != errno)) {
-                printf(" === %s:%d errno: %d \"%s\"\r\n", __func__, __LINE__, errno, hex);
-                return -1;
-            }
-
-            sign[nbytes++] = num;
-        }
-
-        if (res < sizeof(buf)) {
-            break;
-        }
-    }
-
-    return nbytes;
 }
 
 STATIC VOID OTA_TestThread(VOID)
@@ -531,126 +671,17 @@ STATIC VOID OTA_TestThread(VOID)
 
     SerialInit();
 
-    unsigned char *workBuf = malloc(XMODEM_BUF_SIZE + 6); /* 6 bytes XModem overhead */
-    uint8_t hash[32];
+    OTA_AppState state = {
+        {0},
+        malloc(XMODEM_BUF_SIZE + 6) /* 6 bytes XModem overhead */
+    };
 
     while (1) {
-        int sz, sz2;
-        CommandType cmd = CommandProcess((UINT32 *)&sz, (UINT32 *)&sz2);
-        printf(" === %s:%d cmd: %d sz: %d sz2: %d\r\n", __func__, __LINE__, cmd, sz, sz2);
-
-        int res = 0;
-        if (COMMAND_TYPE_UPLOAD == cmd) {
-            xmodemReceiveCBArg arg = {sz, sz2, {0}};
-            AppSha256Init(&arg.sha256);
-            res = xmodemReceive(workBuf, sz, xmodemReceiveCB, &arg);
-            AppSha256Finish(&arg.sha256, hash);
-            printf("sha256: ");
-            for (size_t i = 0; i < sizeof(hash); ++i) {
-                printf("%02x", hash[i]);
-            }
-            printf("\r\n");
-        } else if (COMMAND_TYPE_PRINT == cmd) {
-            unsigned start = sz;  // & ~0xFF; //(sz / 256) * 256;
-            unsigned bufLen = (unsigned)(sz2 >= 0 ? sz2 : 256);
-
-            for (unsigned offset = 0, next = XMODEM_BUF_SIZE; next < bufLen; offset = next, next += XMODEM_BUF_SIZE) {
-                if (OHOS_SUCCESS == HotaRead(start + offset, XMODEM_BUF_SIZE, workBuf)) {
-                }
-                printf("Read[%u %u %u %u]: {", start, start + offset, XMODEM_BUF_SIZE, bufLen);
-                for (size_t i = 0; i < XMODEM_BUF_SIZE; ++i) {
-                    printf("%02x", workBuf[i]);
-                }
-                printf("}\r\n");
-            }
-
-            unsigned rem = bufLen % XMODEM_BUF_SIZE;
-
-            if (rem != 0) {
-                if (OHOS_SUCCESS == HotaRead(start + bufLen - rem, rem, workBuf)) {
-                }
-                printf("Read[%u %u %u %u]: {", start, start + bufLen - rem, rem, bufLen);
-                for (size_t i = 0; i < rem; ++i) {
-                    printf("%02x", workBuf[i]);
-                }
-                printf("}\r\n");
-            }
-        } else if (COMMAND_TYPE_HASH_SHA256 == cmd) {
-            unsigned start = sz;
-            unsigned bufLen = (unsigned)(sz2 >= 0 ? sz2 : 256);
-            uint8_t hashLocal[32];
-
-            AppSha256Context sha256;
-            AppSha256Init(&sha256);
-
-            for (unsigned offset = 0, next = XMODEM_BUF_SIZE; next < bufLen; offset = next, next += XMODEM_BUF_SIZE) {
-                if (OHOS_SUCCESS == HotaRead(start + offset, XMODEM_BUF_SIZE, workBuf)) {
-                }
-                AppSha256Update(&sha256, workBuf, XMODEM_BUF_SIZE);
-            }
-
-            unsigned rem = bufLen % XMODEM_BUF_SIZE;
-
-            if (rem != 0) {
-                if (OHOS_SUCCESS == HotaRead(start + bufLen - rem, rem, workBuf)) {
-                }
-                AppSha256Update(&sha256, workBuf, rem);
-            }
-
-            AppSha256Finish(&sha256, hashLocal);
-            printf("sha256: ");
-            for (size_t i = 0; i < sizeof(hashLocal); ++i) {
-                printf("%02x", hashLocal[i]);
-            }
-            printf("\r\n");
-        } else if (COMMAND_TYPE_SIGN == cmd) {
-            UINT8 sign[128];
-            ptrdiff_t len = ReadSign(sign, sizeof(sign));
-            if (len < 0) {
-                printf(" === ERROR %s:%d res: %d\r\n", __func__, __LINE__, len);
-            } else {
-                mbedtls_pk_context context;
-                uint32 length = 0;
-
-                mbedtls_pk_init(&context);
-                uint8 *keyBuf = HotaGetPubKey(&length);
-                if (keyBuf == NULL) {
-                    printf("Get key fail\r\n");
-                }
-
-                int32 parseRet = mbedtls_pk_parse_public_key(&context, keyBuf, length);
-                if (parseRet != 0) {
-                    printf("Parse public key failed.\r\n");
-                } else {
-                    int ret;
-                    mbedtls_entropy_context entropy;
-                    mbedtls_rsa_set_padding(mbedtls_pk_rsa(context), MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_SHA256);
-                    mbedtls_entropy_init(&entropy);
-                    if ((ret = mbedtls_rsa_pkcs1_verify(mbedtls_pk_rsa(context), NULL, NULL, MBEDTLS_RSA_PUBLIC,
-                                                        MBEDTLS_MD_SHA256, sizeof(hash), hash, sign)) != 0) {
-                        printf("Sign check fail!\r\n");
-                    } else {
-                        printf("Sign check success!\r\n");
-                    }
-                    mbedtls_pk_free(&context);
-                }
-            }
-        } else if (COMMAND_TYPE_CANCEL == cmd) {
-            HotaCancel();
-            (VOID) HotaInit(OtaErrorCallBack, OtaStatusCallBack);
-            (VOID) HotaSetPackageType(NOT_USE_DEFAULT_PKG);
-        } else if (COMMAND_TYPE_RESTART == cmd) {
-            int ret = HotaRestart();
-            printf("HotaRestart() =  %d\r\n", ret);
-        } else if (COMMAND_TYPE_ROLLBACK == cmd) {
-            int HotaHalRollback(void);
-            int ret = HotaHalRollback();
-            printf("HotaHalRollback() =  %d\r\n", ret);
-        }
-        printf(" === %s:%d res: %d\r\n", __func__, __LINE__, res);
+        CommandType cmd = CommandProcess(&state);
+        printf(" === %s:%d cmd: %d\r\n", __func__, __LINE__, cmd);
     }
 
-    free(workBuf);
+    free(state.workBuf);
 }
 
 VOID OtaUartTestInit(VOID)
