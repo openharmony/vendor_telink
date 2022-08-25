@@ -221,8 +221,8 @@ static int get_first_byte(int *c)
     return 0;
 }
 
-static int packet_check(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg, int bufsz, unsigned char *packetno,
-                        int *retrans, bool use_src, int *len)
+static int packet_check(unsigned char *xbuff, int destsz, XModemReceiveCB cb, UINT8 *arg, int bufsz,
+                        unsigned char *packetno, int *retrans, bool use_src, int *len)
 {
     if (xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)(~xbuff[XMODEM_BLOCK_NUMBER_INV]) &&
         (xbuff[XMODEM_BLOCK_NUMBER] == *packetno || xbuff[XMODEM_BLOCK_NUMBER] == (unsigned char)*packetno - 1) &&
@@ -274,8 +274,6 @@ int xmodemReceive(unsigned char *xbuff, int destsz, XModemReceiveCB cb, void *ar
                 return bufsz;
             } else if (bufsz > 0) {
                 break;
-            }
-            else if (bufsz == 0) {
             }
         }
 
@@ -668,11 +666,16 @@ STATIC VOID OTA_TestThread(VOID)
 {
     printf(" === %s:%d\r\n", __func__, __LINE__);
 
+    UINT8 *workBuff = malloc(XMODEM_BUF_SIZE + 6); /* 6 bytes XModem overhead */
+    if (workBuff == NULL) {
+        printf("%s: Memory allocation error!\r\n", __func__);
+    }
+
     SerialInit();
 
     OTA_AppState state = {
         {0},
-        malloc(XMODEM_BUF_SIZE + 6) /* 6 bytes XModem overhead */
+        workBuff
     };
 
     while (1) {
