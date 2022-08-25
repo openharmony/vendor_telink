@@ -32,17 +32,6 @@
           { "component": "hievent_lite", "features":[] }
         ]
       },
-	  {
-        "subsystem": "distributeddatamgr",
-        "components": [
-          {
-            "component": "kv_store",
-            "features": [
-              "enable_ohos_utils_native_lite_kv_store_use_posix_kv_api = false"
-            ]
-          }
-        ]
-      },
       {
         "subsystem": "commonlibrary",
         "components": [
