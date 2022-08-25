@@ -385,7 +385,6 @@ STATIC ptrdiff_t ReadSign(UINT8 *sign, unsigned len)
             char hex[3] = {buf[i], buf[i + 1], '\0'};
             errno = ENOERR;
             UINT32 num = strtoul(hex, NULL, RADIX_16);
-            printf("Got: '%02x'\r\n", num);
             if (((num == 0) || (ULONG_MAX == num)) && (ENOERR != errno)) {
                 printf(" === %s:%d errno: %d \"%s\"\r\n", __func__, __LINE__, errno, hex);
                 return -1;
