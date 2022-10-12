@@ -1,0 +1,10 @@
+{
+  "parts": {
+    "product_ota_demo": {
+      "module_list": [
+        "//vendor/telink/ota_demo:ota_demo"
+      ]
+    }
+  },
+  "subsystem": "product_ota_demo"
+}
