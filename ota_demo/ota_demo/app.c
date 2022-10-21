@@ -495,7 +495,8 @@ STATIC VOID CommandRunSign(OTA_AppState *state)
             mbedtls_entropy_context entropy;
             mbedtls_rsa_set_padding(mbedtls_pk_rsa(context), MBEDTLS_RSA_PKCS_V15, MBEDTLS_MD_SHA256);
             mbedtls_entropy_init(&entropy);
-            if ((ret = mbedtls_rsa_pkcs1_verify(mbedtls_pk_rsa(context), MBEDTLS_MD_SHA256, sizeof(state->hash), state->hash, sign)) != 0) {
+            if ((ret = mbedtls_rsa_pkcs1_verify(mbedtls_pk_rsa(context), MBEDTLS_MD_SHA256, sizeof(state->hash),
+                state->hash, sign)) != 0) {
                 printf("Sign check fail!\r\n");
             } else {
                 printf("Sign check success!\r\n");
