@@ -35,7 +35,7 @@
       {
         "subsystem": "updater",
         "components": [
-           { "component": "ota_lite", "features": [
+           { "component": "sys_installer_lite", "features": [
                "ohos_security_huks_mbedtls_porting_path = \"//device/soc/telink/b91/adapter/hals/mbedtls\""
              ]
            }
