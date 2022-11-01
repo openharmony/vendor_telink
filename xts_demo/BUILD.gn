@@ -20,7 +20,8 @@ b91_firmware("xts_demo") {
     "bootstrap",
     "broadcast",
     "hctest",
-    "module_ActsKvStoreTest",
+
+    # "module_ActsKvStoreTest",
     "module_ActsUtilsFileTest",
     "module_ActsParameterTest",
     "module_ActsBootstrapTest",
@@ -29,5 +30,8 @@ b91_firmware("xts_demo") {
     "module_ActsSamgrTest",
   ]
 
-  deps = [ "//build/lite:ohos" ]
+  deps = [
+    "//base/startup/syspara_lite/frameworks/parameter:parameter_notes",
+    "//build/lite:ohos",
+  ]
 }
