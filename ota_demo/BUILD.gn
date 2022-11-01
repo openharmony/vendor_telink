@@ -23,7 +23,7 @@ b91_firmware("ota_demo") {
 
   deps = [
     "ota_demo",
-    "//build/lite:ohos",
     "//base/startup/syspara_lite/frameworks/parameter/src:sysparam",
+    "//build/lite:ohos",
   ]
 }
