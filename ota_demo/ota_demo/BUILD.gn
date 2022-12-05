@@ -22,8 +22,8 @@ declare_args() {
 config("myapp_config") {
   include_dirs = [
     "//utils/native/lite/include",
-    "//base/update/ota_lite/interfaces/kits",
-    "//base/update/ota_lite/frameworks/source/verify",
+    "//base/update/sys_installer_lite/interfaces/kits",
+    "//base/update/sys_installer_lite/frameworks/source/verify",
     "$ohos_third_party_dir/mbedtls/include",
   ]
 
@@ -38,7 +38,7 @@ source_set("myapp_inner") {
 
   deps = [
     "//base/hiviewdfx/hiview_lite",
-    "//base/update/ota_lite/frameworks:ota_lite",
+    "//base/update/sys_installer_lite/frameworks:sys_installer_lite",
   ]
 
   if (!defined(defines)) {
