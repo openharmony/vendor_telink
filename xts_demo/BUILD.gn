@@ -23,7 +23,7 @@ b91_firmware("xts_demo") {
 
     # "module_ActsKvStoreTest",
     # "module_ActsUtilsFileTest",
-    # "module_ActsSamgrTest",
+    "module_ActsSamgrTest",
     "module_ActsBootstrapTest",
     "module_ActsHieventLiteTest",
     "module_ActsDfxFuncTest",
@@ -33,4 +33,13 @@ b91_firmware("xts_demo") {
     "//base/startup/syspara_lite/frameworks/parameter:parameter_notes",
     "//build/lite:ohos",
   ]
+
+  if (!defined(ldflags)) {
+    ldflags = []
+  }
+
+  ldflags += [
+    "-Wl,--wrap=malloc",
+    "-Wl,--wrap=free",
+    ]
 }
