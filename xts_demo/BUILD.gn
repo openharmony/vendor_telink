@@ -22,7 +22,7 @@ b91_firmware("xts_demo") {
     "hctest",
 
     # "module_ActsKvStoreTest",
-    # "module_ActsUtilsFileTest",
+    "module_ActsUtilsFileTest",
     "module_ActsSamgrTest",
     "module_ActsBootstrapTest",
     "module_ActsHieventLiteTest",
