@@ -41,5 +41,5 @@ b91_firmware("xts_demo") {
   ldflags += [
     "-Wl,--wrap=malloc",
     "-Wl,--wrap=free",
-    ]
+  ]
 }
