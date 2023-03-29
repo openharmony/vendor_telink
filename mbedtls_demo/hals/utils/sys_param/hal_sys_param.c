@@ -18,7 +18,7 @@
 
 #include "hal_sys_param.h"
 
-static const char OHOS_SERIAL[] = {"1234567890"}; // if not provided serial algorithm,Serial will use this default value.
+static const char OHOS_SERIAL[] = {"1234567890"}; // if not provided serial algorithm, will use this default value.
 
 const char *HalGetSerial(void)
 {
