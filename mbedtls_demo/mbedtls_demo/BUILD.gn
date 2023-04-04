@@ -1,0 +1,49 @@
+# Copyright (c) 2022 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//drivers/hdf_core/adapter/khdf/liteos_m/hdf.gni")
+
+declare_args() {
+}
+
+config("myapp_config") {
+  include_dirs = [
+    "//utils/native/lite/include",
+    "$ohos_third_party_dir/mbedtls/include",
+  ]
+
+  configs = [ "//device/soc/telink/b91:B91_config" ]
+}
+
+source_set("myapp_inner") {
+  sources = [ "app.c" ]
+
+  deps = [
+    "//base/hiviewdfx/hiview_lite",
+    "//device/soc/telink/b91/adapter/hals/mbedtls:mbedtls",
+  ]
+
+  if (!defined(defines)) {
+    defines = []
+  }
+
+  configs += [ ":myapp_config" ]
+}
+
+static_library("mbedtls_demo") {
+  deps = [ ":myapp_inner" ]
+
+  configs += [ ":myapp_config" ]
+}

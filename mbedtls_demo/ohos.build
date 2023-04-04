@@ -1,0 +1,10 @@
+{
+  "parts": {
+    "product_mbedtls_demo": {
+      "module_list": [
+        "//vendor/telink/mbedtls_demo:mbedtls_demo"
+      ]
+    }
+  },
+  "subsystem": "product_mbedtls_demo"
+}
