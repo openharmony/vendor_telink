@@ -166,7 +166,8 @@ static ble_sts_t AppBleConnInit(void)
     GpioSetDir(LED_WHITE_HDF, GPIO_DIR_OUT);
 
     uni_ble_register_connect_disconnect_cb(connect, disconnect);
-
+    blc_ll_initPowerManagement_module();
+    blc_pm_setSleepMask(PM_SLEEP_LEG_ADV | PM_SLEEP_LEG_SCAN | PM_SLEEP_ACL_SLAVE | PM_SLEEP_ACL_MASTER);
     return status;
 }
 

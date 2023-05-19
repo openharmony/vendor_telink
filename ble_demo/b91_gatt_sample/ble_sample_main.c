@@ -43,6 +43,14 @@
 #include "uni_ble.h"
 
 #define BLE_TASK_PRIORITY (OS_TASK_PRIORITY_HIGHEST+1)
+#define BLE_TASK_SEM_TIME 50
+
+static UINT32 proto_task_semaphore;
+
+static void os_give_sem_cb(void)
+{
+    LOS_SemPost(proto_task_semaphore);
+}
 
 static void BleTask(void)
 {
@@ -57,6 +65,7 @@ static void BleTask(void)
 
     while (1) {
         MainLoop();
+        LOS_SemPend(proto_task_semaphore, LOS_WAIT_FOREVER);
     }
 }
 
@@ -87,6 +96,9 @@ void BleSampleInit(void)
     /* load customized freq_offset cap value. */
     blc_app_loadCustomizedParameters();
     UserInitNormal();
+
+    OsSemCreate(0, BLE_TASK_SEM_TIME, &proto_task_semaphore);
+    blc_ll_registerGiveSemCb(os_give_sem_cb);
 
     UINT32 ret;
     UINT32 taskId = 0;
