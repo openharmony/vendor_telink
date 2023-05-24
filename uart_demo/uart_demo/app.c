@@ -39,35 +39,39 @@
 #define UART1 1
 
 
-
-// STATIC VOID HelloWorldTask(VOID)
-// {
-//     while (1) {
-//         time_t t = time(NULL);
-//         printf("Hello World, time: %lld\r\n", (long long)t);
-//         LOS_TaskDelay(DELAY);
-//     }
-// }
-
-// STATIC VOID LedTask(VOID)
-// {
-//     GpioSetDir(LED_BLUE_HDF, GPIO_DIR_OUT);
-
-//     while (1) {
-//         GpioWrite(LED_BLUE_HDF, GPIO_VAL_HIGH);
-//         LOS_Msleep(DELAY);
-
-//         GpioWrite(LED_BLUE_HDF, GPIO_VAL_LOW);
-//         LOS_Msleep(DELAY);
-//     }
-// }
+uint8_t txbuf[80] = "\nHDF uart test string 1\n";
 
 
-STATIC VOID uart_task(VOID)
+STATIC VOID uart_test_task(VOID)
 {
     LOS_TaskDelay(DELAY);
+
+    /* See device/soc/telink/b91/hcs/uart/uart_config.hcs
+       for hdf uart configuration */
     DevHandle *uart1 = UartOpen(UART1);
 
+    if (uart1 == NULL) {
+        printf("UartOpen %u: failed!\n", UART1);
+    }
+
+    uint32_t baud;
+    UartGetBaud(uart1, &baud);
+    printf("\n%s: Get baudrate %u\r\n", __func__, baud);
+
+    baud = 115200;
+    UartSetBaud(uart1, baud);
+    UartGetBaud(uart1, &baud);
+    printf("%s: Set baudrate %u\r\n", __func__, baud);
+
+    baud = 921600;
+    UartSetBaud(uart1, baud);
+    UartGetBaud(uart1, &baud);
+    printf("%s: Set baudrate %u\r\n", __func__, baud);
+
+    uint32_t ret = UartWrite(uart1, txbuf, strlen((char *)txbuf));
+    if (ret != 0) {
+        printf("UartWrite %u: failed!\n", UART1);
+    }
 }
 
 
@@ -78,7 +82,7 @@ void AppMain(void)
     UINT32 taskId = 0;
 
     TSK_INIT_PARAM_S taskParam = {0};
-    taskParam.pfnTaskEntry = (TSK_ENTRY_FUNC)uart_task;
+    taskParam.pfnTaskEntry = (TSK_ENTRY_FUNC)uart_test_task;
     taskParam.uwArg = 0;
     taskParam.uwStackSize = LOSCFG_BASE_CORE_TSK_DEFAULT_STACK_SIZE;
     taskParam.pcName = "uart_task";
