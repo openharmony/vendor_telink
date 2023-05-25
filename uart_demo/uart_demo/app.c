@@ -37,6 +37,8 @@
 #define DELAY 2000
 #define UART0 0
 #define UART1 1
+#define BAUD_115200 115200
+#define BAUD_921600 921600
 
 
 uint8_t txbuf[80] = "\nHDF uart test string 1\n";
@@ -58,12 +60,12 @@ STATIC VOID uart_test_task(VOID)
     UartGetBaud(uart1, &baud);
     printf("\n%s: Get baudrate %u\r\n", __func__, baud);
 
-    baud = 115200;
+    baud = BAUD_115200;
     UartSetBaud(uart1, baud);
     UartGetBaud(uart1, &baud);
     printf("%s: Set baudrate %u\r\n", __func__, baud);
 
-    baud = 921600;
+    baud = BAUD_921600;
     UartSetBaud(uart1, baud);
     UartGetBaud(uart1, &baud);
     printf("%s: Set baudrate %u\r\n", __func__, baud);
