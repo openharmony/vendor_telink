@@ -1,0 +1,10 @@
+{
+  "parts": {
+    "product_uart_demo": {
+      "module_list": [
+        "//vendor/telink/uart_demo:uart_demo"
+      ]
+    }
+  },
+  "subsystem": "product_uart_demo"
+}

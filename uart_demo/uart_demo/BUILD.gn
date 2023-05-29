@@ -1,0 +1,48 @@
+# Copyright (c) 2022 Telink Semiconductor (Shanghai) Co., Ltd. ("TELINK")
+# All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+declare_args() {
+  telink_gpio_irq_sample_enable = false
+}
+
+config("myapp_config") {
+  include_dirs = [ "//commonlibrary/utils_lite/include" ]
+
+  configs = [ "//device/soc/telink/b91:B91_config" ]
+}
+
+source_set("myapp_inner") {
+  sources = [ "app.c" ]
+
+  deps = [ "//base/hiviewdfx/hiview_lite" ]
+
+  if (!defined(defines)) {
+    defines = []
+  }
+
+  if (telink_gpio_irq_sample_enable) {
+    defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=1" ]
+  } else {
+    defines += [ "TELINK_GPIO_IRQ_SAMPLE_ENABLE=0" ]
+  }
+
+  configs += [ ":myapp_config" ]
+}
+
+static_library("uart_demo") {
+  deps = [ ":myapp_inner" ]
+
+  configs += [ ":myapp_config" ]
+}
