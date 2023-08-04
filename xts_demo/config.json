@@ -50,7 +50,7 @@
         "subsystem": "xts",
         "components": [
           { "component": "acts", "features": [ "build_xts=true" ] },
-          { "component": "xts_tools", "features": [] }
+          { "component": "tools", "features": [] }
         ]
       }
     ],
