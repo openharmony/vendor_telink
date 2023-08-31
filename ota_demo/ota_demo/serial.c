@@ -269,7 +269,7 @@ void SerialInit(void)
     uart_set_pin(SERVICE_UART_PIN_TX, SERVICE_UART_PIN_RX);
     uart_reset(SERVICE_UART_PORT);
     uart_cal_div_and_bwpc(SERVICE_UART_BAUDRATE, sys_clk.pclk * HZ_IN_MHZ, &div, &bwpc);
-    telink_b91_uart_init(SERVICE_UART_PORT, div, bwpc, SERVICE_UART_PARITY, SERVICE_UART_STOP_BITS);
+    uart_init(SERVICE_UART_PORT, div, bwpc, SERVICE_UART_PARITY, SERVICE_UART_STOP_BITS);
     uart_rx_irq_trig_level(SERVICE_UART_PORT, 1);
     uart_tx_irq_trig_level(SERVICE_UART_PORT, 0);
 
