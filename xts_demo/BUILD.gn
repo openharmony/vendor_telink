@@ -29,9 +29,7 @@ b91_firmware("xts_demo") {
     "module_ActsDfxFuncTest",
   ]
 
-  deps = [
-    "//build/lite:ohos",
-  ]
+  deps = [ "//build/lite:ohos" ]
 
   if (!defined(ldflags)) {
     ldflags = []
