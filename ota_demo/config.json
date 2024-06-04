@@ -44,7 +44,7 @@
         "subsystem": "updater",
         "components": [
            { "component": "sys_installer_lite", "features": [
-               "ohos_security_huks_mbedtls_porting_path = \"//device/soc/telink/b91/adapter/hals/mbedtls\""
+               "sys_installer_lite_security_huks_mbedtls_porting_path = \"//device/soc/telink/b91/adapter/hals/mbedtls\""
              ]
            }
         ]
